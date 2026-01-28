@@ -11,7 +11,7 @@
   <header class="header">
     <div class="header-inner">
       <h1 class="logo">Riftbound Secret Stats</h1>
-      <p class="tagline">from Riftbound Tracker</p>
+      <p class="tagline">To farm Best Ofs</p>
     </div>
   </header>
 
@@ -55,10 +55,39 @@
         </div>
       </div>
 
+      <div class="filters-section">
+        <h3>Filters</h3>
+        <div class="filters-row">
+          <label>Include players (comma, empty = all)</label>
+          <input type="text" id="filter-include-players" class="filter-input" placeholder="e.g. YuutoTCG, FriendName" />
+        </div>
+        <div class="filters-row">
+          <label>Exclude players (comma)</label>
+          <input type="text" id="filter-exclude-players" class="filter-input" placeholder="e.g. OtherAccount" />
+        </div>
+        <div class="filters-row">
+          <label>Opponent hero</label>
+          <select id="filter-opponent-hero" class="filter-select">
+            <option value="">Any</option>
+          </select>
+        </div>
+        <div class="filters-row">
+          <label>Battlefield</label>
+          <select id="filter-battlefield" class="filter-select">
+            <option value="">Any</option>
+          </select>
+        </div>
+      </div>
+
       <div class="winrate-over-time hidden" id="winrate-over-time">
         <h3>Winrate by day</h3>
         <div class="chart-legend">Bar = Day</div>
         <div class="day-bars" id="day-bars"></div>
+      </div>
+
+      <div class="turn-stats hidden" id="turn-stats">
+        <h3>Turn count</h3>
+        <div id="turn-stats-content"></div>
       </div>
 
       <div class="cards-section">
@@ -77,6 +106,26 @@
               </tr>
             </thead>
             <tbody id="card-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="cards-section opp-cards-section">
+        <div class="cards-header">
+          <h3>Opponent cards – winrate when opp played</h3>
+          <input type="search" id="opp-card-search" class="search-input" placeholder="Search opponent cards" />
+        </div>
+        <div class="table-wrap">
+          <table class="card-table" id="opp-card-table">
+            <thead>
+              <tr>
+                <th class="col-name">Card</th>
+                <th class="col-num">Games</th>
+                <th class="col-num">Wins</th>
+                <th class="col-num">Winrate</th>
+              </tr>
+            </thead>
+            <tbody id="opp-card-body"></tbody>
           </table>
         </div>
       </div>

@@ -14,11 +14,23 @@
   const dayBarsEl = $("day-bars");
   const winrateOverTime = $("winrate-over-time");
 
+  const OPPONENT_HEROES = [
+    "Irelia", "Fiora", "Ezreal", "Lucian", "Rumble", "Ornn",
+    "Annie", "Master Yi", "Lux", "Garen", "Ahri", "Darius",
+    "Jinx", "Kai'Sa", "Lee Sin", "Miss Fortune", "Sett", "Teemo",
+    "Viktor", "Volibear", "Yasuo"
+  ];
+
   let currentData = null;
   let currentStats = null;
   let sortKey = "gamesPlayed";
   let sortDir = "desc";
   let filterQuery = "";
+  let filterPlayerInclude = "";
+  let filterPlayerExclude = "";
+  let filterOpponentHero = "";
+  let filterBattlefield = "";
+  let oppCardFilterQuery = "";
 
   function setError(msg) {
     if (errorEl) errorEl.textContent = msg || "";
@@ -45,12 +57,37 @@
     return "wr-bad";
   }
 
+  function normPlayer(s) {
+    return String(s || "").toLowerCase().trim();
+  }
+
+  function getFilteredGames(games) {
+    if (!Array.isArray(games)) return [];
+    let list = games.slice();
+    const includeList = filterPlayerInclude.split(",").map((s) => normPlayer(s)).filter(Boolean);
+    const excludeList = filterPlayerExclude.split(",").map((s) => normPlayer(s)).filter(Boolean);
+    if (includeList.length) {
+      list = list.filter((g) => includeList.includes(normPlayer(g.playerName)));
+    }
+    if (excludeList.length) {
+      list = list.filter((g) => !excludeList.includes(normPlayer(g.playerName)));
+    }
+    if (filterOpponentHero) {
+      list = list.filter((g) => (g.opponentHero || "") === filterOpponentHero);
+    }
+    if (filterBattlefield) {
+      list = list.filter((g) => (g.battlefield || "") === filterBattlefield);
+    }
+    return list;
+  }
+
   function buildStats(games) {
-    const wins = games.filter((g) => g.result === "win").length;
-    const total = games.length;
+    const filtered = getFilteredGames(games);
+    const wins = filtered.filter((g) => g.result === "win").length;
+    const total = filtered.length;
 
     const byCard = new Map();
-    for (const game of games) {
+    for (const game of filtered) {
       const isWin = game.result === "win";
       const cards = game.cardsPlayed || [];
       for (const entry of cards) {
@@ -75,9 +112,48 @@
     return { total, wins, rows };
   }
 
+  function buildOpponentCardStats(games) {
+    const filtered = getFilteredGames(games);
+    const byCard = new Map();
+    for (const game of filtered) {
+      const isWin = game.result === "win";
+      const cards = game.opponentCardsPlayed || [];
+      for (const entry of cards) {
+        const name = (entry.name || "").trim();
+        if (!name) continue;
+        if (!byCard.has(name)) {
+          byCard.set(name, { gamesPlayed: 0, winsWhenPlayed: 0 });
+        }
+        const rec = byCard.get(name);
+        rec.gamesPlayed += 1;
+        if (isWin) rec.winsWhenPlayed += 1;
+      }
+    }
+    return Array.from(byCard.entries())
+      .map(([name, rec]) => ({
+        name,
+        gamesPlayed: rec.gamesPlayed,
+        winsWhenPlayed: rec.winsWhenPlayed,
+        winrate: rec.gamesPlayed ? (100 * rec.winsWhenPlayed) / rec.gamesPlayed : 0,
+      }))
+      .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+  }
+
+  function buildTurnStats(games) {
+    const filtered = getFilteredGames(games).filter((g) => g.turnCount != null && g.turnCount >= 1);
+    if (!filtered.length) return null;
+    const wins = filtered.filter((g) => g.result === "win");
+    const losses = filtered.filter((g) => g.result === "loss");
+    const avgTurnsWin = wins.length ? wins.reduce((s, g) => s + g.turnCount, 0) / wins.length : null;
+    const avgTurnsLoss = losses.length ? losses.reduce((s, g) => s + g.turnCount, 0) / losses.length : null;
+    const avgTurnsAll = filtered.reduce((s, g) => s + g.turnCount, 0) / filtered.length;
+    return { avgTurnsWin, avgTurnsLoss, avgTurnsAll, gamesWithTurns: filtered.length };
+  }
+
   function buildDayStats(games) {
+    const filtered = getFilteredGames(games);
     const byDay = new Map();
-    for (const game of games) {
+    for (const game of filtered) {
       const dateStr = game.date ? game.date.slice(0, 10) : "";
       if (!dateStr) continue;
       if (!byDay.has(dateStr)) {
@@ -177,6 +253,72 @@
     });
   }
 
+  function fillFilterSelects(games) {
+    const heroSelect = $("filter-opponent-hero");
+    const bfSelect = $("filter-battlefield");
+    if (heroSelect) {
+      const heroes = new Set();
+      games.forEach((g) => { if (g.opponentHero) heroes.add(g.opponentHero); });
+      heroSelect.innerHTML = "<option value=\"\">Any</option>";
+      OPPONENT_HEROES.forEach((h) => {
+        const opt = document.createElement("option");
+        opt.value = h;
+        opt.textContent = h;
+        heroSelect.appendChild(opt);
+      });
+    }
+    if (bfSelect) {
+      const battlefields = new Set();
+      games.forEach((g) => { if (g.battlefield) battlefields.add(g.battlefield); });
+      bfSelect.innerHTML = "<option value=\"\">Any</option>";
+      Array.from(battlefields).sort().forEach((bf) => {
+        const opt = document.createElement("option");
+        opt.value = bf;
+        opt.textContent = bf;
+        bfSelect.appendChild(opt);
+      });
+    }
+  }
+
+  function renderOpponentCardTable() {
+    const oppRows = buildOpponentCardStats(currentData.games);
+    const tbody = $("opp-card-body");
+    if (!tbody) return;
+    let rows = oppRows;
+    if (oppCardFilterQuery.trim()) {
+      const q = oppCardFilterQuery.trim().toLowerCase();
+      rows = rows.filter((r) => r.name.toLowerCase().includes(q));
+    }
+    tbody.innerHTML = "";
+    for (const row of rows) {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td class=\"col-name\">" + escapeHtml(row.name) + "</td>" +
+        "<td class=\"col-num\">" + row.gamesPlayed + "</td>" +
+        "<td class=\"col-num\">" + row.winsWhenPlayed + "</td>" +
+        "<td class=\"col-num " + wrClass(row.winrate) + "\">" + row.winrate.toFixed(1) + "%</td>";
+      tbody.appendChild(tr);
+    }
+  }
+
+  function renderTurnStats() {
+    const turnStats = buildTurnStats(currentData.games);
+    const wrap = $("turn-stats");
+    const content = $("turn-stats-content");
+    if (!wrap || !content) return;
+    if (!turnStats || !turnStats.gamesWithTurns) {
+      wrap.classList.add("hidden");
+      return;
+    }
+    wrap.classList.remove("hidden");
+    const parts = [];
+    parts.push("Games with turn data: " + turnStats.gamesWithTurns);
+    if (turnStats.avgTurnsWin != null) parts.push("Avg turns when you won: " + turnStats.avgTurnsWin.toFixed(1));
+    if (turnStats.avgTurnsLoss != null) parts.push("Avg turns when you lost: " + turnStats.avgTurnsLoss.toFixed(1));
+    parts.push("Avg turns (all): " + turnStats.avgTurnsAll.toFixed(1));
+    content.textContent = parts.join(" · ");
+  }
+
   function render() {
     if (!currentStats) return;
     setError("");
@@ -195,7 +337,9 @@
       if (winrateOverTime) winrateOverTime.classList.add("hidden");
     }
 
+    renderTurnStats();
     renderTable();
+    renderOpponentCardTable();
     updateSortUI();
   }
 
@@ -203,9 +347,10 @@
     const data = parsePayload(raw);
     if (!data) return;
     currentData = data;
+    fillFilterSelects(data.games || []);
     const stats = buildStats(data.games);
-    if (stats.rows.length === 0) {
-      setError("No card play data in this export. Record some wins/losses with cards played first.");
+    if (!data.games || data.games.length === 0) {
+      setError("No games in this export. Record some wins/losses first.");
       if (dashboard) dashboard.classList.add("hidden");
       if (emptyState) emptyState.classList.remove("hidden");
       return;
@@ -279,6 +424,33 @@
     cardSearch.addEventListener("input", (e) => {
       filterQuery = (e.target && e.target.value) || "";
       renderTable();
+    });
+  }
+
+  const filterIncludeEl = $("filter-include-players");
+  const filterExcludeEl = $("filter-exclude-players");
+  const filterHeroEl = $("filter-opponent-hero");
+  const filterBfEl = $("filter-battlefield");
+  function applyFiltersAndRender() {
+    if (filterIncludeEl) filterPlayerInclude = (filterIncludeEl.value || "").trim();
+    if (filterExcludeEl) filterPlayerExclude = (filterExcludeEl.value || "").trim();
+    if (filterHeroEl) filterOpponentHero = (filterHeroEl.value || "").trim();
+    if (filterBfEl) filterBattlefield = (filterBfEl.value || "").trim();
+    if (currentData && currentStats) {
+      currentStats = buildStats(currentData.games);
+      render();
+    }
+  }
+  if (filterIncludeEl) filterIncludeEl.addEventListener("input", applyFiltersAndRender);
+  if (filterExcludeEl) filterExcludeEl.addEventListener("input", applyFiltersAndRender);
+  if (filterHeroEl) filterHeroEl.addEventListener("change", applyFiltersAndRender);
+  if (filterBfEl) filterBfEl.addEventListener("change", applyFiltersAndRender);
+
+  const oppCardSearch = $("opp-card-search");
+  if (oppCardSearch) {
+    oppCardSearch.addEventListener("input", (e) => {
+      oppCardFilterQuery = (e.target && e.target.value) || "";
+      if (currentData) renderOpponentCardTable();
     });
   }
 
