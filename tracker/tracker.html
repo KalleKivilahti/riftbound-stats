@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Riftbound Tracker</title>
+  <link rel="stylesheet" href="tracker.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title">Riftbound Deck Tracker</div>
+
+      <div class="top-right">
+        <input id="my-name" class="control small" placeholder="My name (exact)" />
+        <span id="auto-status" class="badge">Auto log: ...</span>
+        <button id="reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="columns">
+      <!-- YOU -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Your deck</h2>
+          <div class="stats" id="stats-you"></div>
+        </div>
+
+        <div class="panel-actions">
+          <select id="preset-you" class="control">
+            <option value="">Presets (your deck)</option>
+          </select>
+          <button id="use-preset-you">Use preset</button>
+          <button id="delete-preset-you">Delete preset</button>
+        </div>
+
+        <textarea id="input-you" placeholder="Paste your decklist:
+3 Stacked Deck
+2 Rebuke
+1 Falling Star"></textarea>
+
+        <div class="panel-actions">
+          <input id="new-preset-name-you" class="control" placeholder="New preset name..." />
+          <button id="new-preset-you">New preset</button>
+        </div>
+
+        <div class="panel-actions">
+          <button id="start-you">Load your list</button>
+          <button id="undo-you">Undo</button>
+          <input id="search-you" class="control" placeholder="Search card..." />
+        </div>
+
+        <div class="panel-actions">
+          <span id="recorded-count" class="badge"></span>
+          <button id="record-win">Record win</button>
+          <button id="record-loss">Record loss</button>
+          <button id="export-data">Export data</button>
+          <a id="open-stats" href="#" target="_blank" rel="noopener">View stats</a>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Card</th>
+                <th class="num">Left</th>
+                <th class="num">Next draw %</th>
+                <th class="num">-</th>
+                <th class="num">+</th>
+              </tr>
+            </thead>
+            <tbody id="list-you"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- OPP -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Opponent deck</h2>
+          <div class="stats" id="stats-opp"></div>
+        </div>
+
+        <div class="panel-actions">
+          <select id="preset-opp" class="control">
+            <option value="">Presets (opponent)</option>
+          </select>
+          <button id="use-preset-opp">Use preset</button>
+          <button id="delete-preset-opp">Delete preset</button>
+
+          <div class="handbox">
+            <span class="handlabel">Opp hand</span>
+            <button class="btn small" id="hand-minus">-</button>
+            <span class="handnum" id="hand-value">0</span>
+            <button class="btn small" id="hand-plus">+</button>
+          </div>
+        </div>
+
+        <textarea id="input-opp" placeholder="Paste opponent decklist (or a guessed list)"></textarea>
+
+        <div class="panel-actions">
+          <input id="new-preset-name-opp" class="control" placeholder="New preset name..." />
+          <button id="new-preset-opp">New preset</button>
+        </div>
+
+        <div class="panel-actions">
+          <button id="start-opp">Load opponent list</button>
+          <button id="undo-opp">Undo</button>
+          <input id="search-opp" class="control" placeholder="Search card..." />
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Card</th>
+                <th class="num">Left</th>
+                <th class="num">1x+ %</th>
+                <th class="num">2x+ %</th>
+                <th class="num">3x+ %</th>
+                <th class="num">-</th>
+                <th class="num">+</th>
+              </tr>
+            </thead>
+            <tbody id="list-opp"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">
+      Auto log tracks only "played CARD" lines from tcg-arena chat. Anything else is ignored.
+    </div>
+  </div>
+
+  <script src="tracker.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Riftbound Tracker Window",
+  "version": "1.4.2",
+  "description": "Second screen deck tracker with presets, opponent hand odds, and tcg-arena chat auto tracking.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": [
+    "*://tcg-arena.fr/*",
+    "*://www.tcg-arena.fr/*"
+  ],
+  "action": {
+    "default_title": "Open Riftbound Tracker"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://tcg-arena.fr/*",
+        "*://www.tcg-arena.fr/*"
+      ],
+      "js": ["tcg_observer.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

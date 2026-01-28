@@ -1,0 +1,38 @@
+/* Riftbound Tracker – minimal layout */
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #1a1a1e; color: #e4e4e7; }
+.app { max-width: 720px; margin: 0 auto; padding: 1rem; }
+.topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.title { font-size: 1.1rem; font-weight: 600; }
+.top-right { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.control { padding: 0.35rem 0.5rem; background: #25252a; border: 1px solid #3f3f46; border-radius: 4px; color: inherit; font-size: 0.9rem; }
+.control.small { width: 140px; }
+.badge { font-size: 0.8rem; color: #a1a1aa; }
+button, .btn { padding: 0.4rem 0.75rem; background: #3f3f46; border: none; border-radius: 4px; color: #e4e4e7; cursor: pointer; font-size: 0.9rem; }
+button:hover, .btn:hover { background: #52525b; }
+.btn.small { padding: 0.2rem 0.4rem; font-size: 0.85rem; }
+.columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 640px) { .columns { grid-template-columns: 1fr; } }
+.panel { background: #25252a; border-radius: 8px; padding: 1rem; border: 1px solid #2a2a30; }
+.panel-head { margin-bottom: 0.75rem; }
+.panel-head h2 { margin: 0 0 0.25rem; font-size: 1rem; }
+.stats { font-size: 0.85rem; color: #a1a1aa; }
+.panel-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+.panel-actions select.control { min-width: 120px; }
+textarea.control { width: 100%; min-height: 80px; resize: vertical; margin-bottom: 0.5rem; }
+.table-wrap { overflow-x: auto; margin-top: 0.5rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { padding: 0.4rem 0.5rem; text-align: left; }
+th { background: #2d2d33; color: #a1a1aa; font-weight: 600; }
+.num { text-align: right; }
+.cardname.crossed { text-decoration: line-through; opacity: 0.7; }
+.pct.hot { color: #4ade80; }
+.pct.warm { color: #fbbf24; }
+.pct.cool { color: #60a5fa; }
+.pct.none { color: #71717a; }
+.handbox { display: flex; align-items: center; gap: 0.25rem; }
+.handlabel { font-size: 0.85rem; color: #a1a1aa; }
+.handnum { min-width: 1.5rem; text-align: center; }
+.footer { margin-top: 1rem; font-size: 0.8rem; color: #71717a; }
+a { color: #60a5fa; text-decoration: none; }
+a:hover { text-decoration: underline; }

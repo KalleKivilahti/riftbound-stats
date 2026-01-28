@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Riftbound Secret Stats</title>
+  <meta name="description" content="View winrate when each card is played from Riftbound Tracker exports." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <h1 class="logo">Riftbound Secret Stats</h1>
+      <p class="tagline">from Riftbound Tracker</p>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="import-section" id="import-section">
+      <div class="import-card" id="drop-zone">
+        <div class="import-content">
+          <div class="import-icon" aria-hidden="true">Import</div>
+          <h2>Import your data</h2>
+          <p>Export JSON from the Riftbound Tracker extension, then drop the file here or paste below.</p>
+          <label class="file-label">
+            <input type="file" id="file-input" accept=".json,application/json" class="file-input" />
+            Choose file
+          </label>
+        </div>
+      </div>
+      <div class="import-raw">
+        <label for="json-input">Or paste JSON</label>
+        <textarea id="json-input" placeholder="Paste content of riftbound-stats-*.json here"></textarea>
+        <div class="import-actions">
+          <button type="button" class="btn btn-primary" id="btn-apply">Load data</button>
+          <button type="button" class="btn btn-ghost" id="btn-clear-data">Clear stored data</button>
+        </div>
+      </div>
+      <p class="error" id="error" aria-live="polite"></p>
+    </section>
+
+    <section class="dashboard hidden" id="dashboard">
+      <div class="overview">
+        <div class="stat-card">
+          <span class="stat-value" id="total-games">0</span>
+          <span class="stat-label">Total games</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="total-wins">0</span>
+          <span class="stat-label">Wins</span>
+        </div>
+        <div class="stat-card stat-card-wr">
+          <span class="stat-value" id="overall-wr">0%</span>
+          <span class="stat-label">Overall winrate</span>
+        </div>
+      </div>
+
+      <div class="winrate-over-time hidden" id="winrate-over-time">
+        <h3>Winrate by day</h3>
+        <div class="chart-legend">Bar = Day</div>
+        <div class="day-bars" id="day-bars"></div>
+      </div>
+
+      <div class="cards-section">
+        <div class="cards-header">
+          <h3>Cards – winrate when played</h3>
+          <input type="search" id="card-search" class="search-input" placeholder="Search cards" />
+        </div>
+        <div class="table-wrap">
+          <table class="card-table" id="card-table">
+            <thead>
+              <tr>
+                <th class="col-name sortable" data-sort="name">Card</th>
+                <th class="col-num sortable" data-sort="gamesPlayed">Games played</th>
+                <th class="col-num sortable" data-sort="winsWhenPlayed">Wins when played</th>
+                <th class="col-num sortable" data-sort="winrate">Winrate when played</th>
+              </tr>
+            </thead>
+            <tbody id="card-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="empty-state" id="empty-state">
+      <p>Upload a JSON from Tracker</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Tog is a bozo</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
