@@ -2,8 +2,8 @@ chrome.action.onClicked.addListener(() => {
   chrome.windows.create({
     url: chrome.runtime.getURL("tracker.html"),
     type: "normal",
-    width: 740,
-    height: 1200
+    width: 1100,
+    height: 900
   });
 });
 

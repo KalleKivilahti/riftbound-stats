@@ -1,8 +1,31 @@
 (function () {
-  console.log("[Riftbound] tcg_observer.js LOADED v4 – " + new Date().toISOString());
+  const href = window.location.href;
+  const isPlayPage =
+    href.includes("tcg-arena.fr/play") ||
+    href.includes("www.tcg-arena.fr/play");
+  if (!isPlayPage) {
+    console.log("[Riftbound] Not on play page (" + href + "), skipping observer");
+    return;
+  }
+  console.log("[Riftbound] tcg_observer.js LOADED on play page – " + new Date().toISOString());
 
   const STORAGE_KEY_MYNAME = "rb_myName";
   let myName = "";
+  let contextInvalidated = false;
+
+  function safeSendMessage(msg) {
+    if (contextInvalidated) return;
+    try {
+      chrome.runtime.sendMessage(msg);
+    } catch (err) {
+      if (err && (err.message === "Extension context invalidated." || String(err.message).includes("invalidated"))) {
+        contextInvalidated = true;
+        console.warn("[Riftbound] Extension context invalidated – reload the tcg-arena tab to resume tracking.");
+      } else {
+        throw err;
+      }
+    }
+  }
 
   async function loadMyName() {
     try {
@@ -20,15 +43,11 @@
 
   function tryExtractPlayed(element) {
     if (!element?.textContent) return null;
-
     let text = element.textContent.trim();
     if (!text.includes("played")) return null;
 
-    console.log("[Riftbound] Potential played message:", text.substring(0, 120) + (text.length > 120 ? "..." : ""));
-
     let player = "";
     let rest = "";
-
     if (text.includes(" played ")) {
       const parts = text.split(" played ");
       player = parts[0].trim();
@@ -40,47 +59,80 @@
         rest = text.substring(idx + "played".length).trim();
       }
     }
-
     if (!player || !rest) return null;
 
     let card = rest.replace(/ from hand|[\.\!]$/g, "").trim();
-
     const cardElem = element.querySelector('[class*="card"], .name, strong, b, span:not([class*="time"])');
     if (cardElem) card = cardElem.textContent.trim();
-
     if (!card) return null;
-
-    console.log(`[Riftbound] Detected → Player: ${player} | Action: played | Card: ${card}`);
 
     return { playerName: player, cardName: card };
   }
 
+  function tryExtractRevealed(element) {
+    if (!element?.textContent) return null;
+    const text = element.textContent.trim();
+    if (!text.includes("revealed")) return null;
+
+    let player = "";
+    let battlefield = "";
+    if (text.includes(" revealed ")) {
+      const parts = text.split(" revealed ");
+      player = parts[0].trim();
+      battlefield = (parts[1] || "").trim();
+    } else {
+      const idx = text.indexOf("revealed");
+      if (idx > 0) {
+        player = text.substring(0, idx).trim();
+        battlefield = text.substring(idx + "revealed".length).trim();
+      }
+    }
+    if (!player || !battlefield) return null;
+
+    return { playerName: player, battlefield: battlefield };
+  }
+
+  function tryExtractTurnCount(element) {
+    if (!element?.textContent) return null;
+    const text = element.textContent.trim();
+    const m = text.match(/\b(?:turn\s*)?(\d+)\s*turns?\b/i) || text.match(/\bturn\s*(\d+)\b/i);
+    if (!m) return null;
+    const n = parseInt(m[1], 10);
+    if (n < 1 || n > 999) return null;
+    return { turnCount: n };
+  }
+
   function handlePossibleLine(node) {
     if (node.nodeType !== Node.ELEMENT_NODE) return;
-    const info = tryExtractPlayed(node);
-    if (!info) return;
+    const text = node.textContent && node.textContent.trim();
+    if (!text) return;
 
-    const side = normName(info.playerName) === normName(myName) ? "you" : "opp";
+    const played = tryExtractPlayed(node);
+    if (played) {
+      const side = normName(played.playerName) === normName(myName) ? "you" : "opp";
+      safeSendMessage({ type: "rb_log_event", side, delta: -1, cardName: played.cardName });
+      return;
+    }
 
-    console.log(`[Riftbound] EVENT → ${side.toUpperCase()} played "${info.cardName}"`);
+    const revealed = tryExtractRevealed(node);
+    if (revealed) {
+      safeSendMessage({ type: "rb_battlefield", battlefield: revealed.battlefield });
+      return;
+    }
 
-    chrome.runtime.sendMessage({
-      type: "rb_log_event",
-      side: side,
-      delta: -1,
-      cardName: info.cardName
-    });
+    const turnInfo = tryExtractTurnCount(node);
+    if (turnInfo) {
+      safeSendMessage({ type: "rb_turn_count", turnCount: turnInfo.turnCount });
+    }
   }
 
   function startObserver(container) {
     console.log("[Riftbound] Observer starting on:", container?.className || container?.id || "unknown");
 
     const observer = new MutationObserver((mutations) => {
-      console.log("[Riftbound] Mutation fired – " + mutations.length + " changes");
-
+      if (contextInvalidated) return;
       mutations.forEach(mut => {
         if (mut.type === "childList" && mut.addedNodes.length > 0) {
-          console.log("[Riftbound] childList – added nodes:", mut.addedNodes.length);
           mut.addedNodes.forEach(node => {
             if (node.nodeType === Node.ELEMENT_NODE) {
               handlePossibleLine(node);
@@ -131,21 +183,27 @@
     }
   }
 
+  let statusIntervalId = null;
   (async () => {
     console.log("[Riftbound] Init v4");
     await loadMyName();
     tryFindAndObserve();
 
-    setInterval(() => {
-      chrome.runtime.sendMessage({ type: "rb_log_status", ok: true });
+    statusIntervalId = setInterval(() => {
+      if (contextInvalidated) {
+        if (statusIntervalId != null) clearInterval(statusIntervalId);
+        return;
+      }
+      safeSendMessage({ type: "rb_log_status", ok: true });
     }, 5000);
   })();
 
   chrome.runtime.onMessage.addListener(msg => {
+    if (contextInvalidated) return;
     if (msg?.type === "rb_ping") {
       console.log("[Riftbound] Ping received");
       loadMyName();
-      chrome.runtime.sendMessage({ type: "rb_log_status", ok: true });
+      safeSendMessage({ type: "rb_log_status", ok: true });
     }
   });
 })();

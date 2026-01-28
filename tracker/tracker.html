@@ -24,6 +24,7 @@
         <div class="panel-head">
           <h2>Your deck</h2>
           <div class="stats" id="stats-you"></div>
+          <p class="stats-hint" id="stats-you-hint">Paste decklist for “left in deck” and draw %. Or leave empty and use “from log” only.</p>
         </div>
 
         <div class="panel-actions">
@@ -34,10 +35,10 @@
           <button id="delete-preset-you">Delete preset</button>
         </div>
 
-        <textarea id="input-you" placeholder="Paste your decklist:
-3 Stacked Deck
-2 Rebuke
-1 Falling Star"></textarea>
+        <div class="deck-paste">
+          <label for="input-you" class="deck-label">Your decklist</label>
+          <textarea id="input-you" class="deck-input" placeholder="3 Stacked Deck&#10;2 Rebuke&#10;1 Falling Star"></textarea>
+        </div>
 
         <div class="panel-actions">
           <input id="new-preset-name-you" class="control" placeholder="New preset name..." />
@@ -51,6 +52,10 @@
         </div>
 
         <div class="panel-actions">
+          <select id="opponent-hero" class="control" title="Opponent hero (manual – cannot auto-detect)"></select>
+          <span id="game-meta" class="badge game-meta"></span>
+        </div>
+        <div class="panel-actions">
           <span id="recorded-count" class="badge"></span>
           <button id="record-win">Record win</button>
           <button id="record-loss">Record loss</button>
@@ -58,7 +63,7 @@
           <a id="open-stats" href="#" target="_blank" rel="noopener">View stats</a>
         </div>
 
-        <div class="table-wrap">
+        <div class="table-wrap" id="your-deck-wrap">
           <table>
             <thead>
               <tr>
@@ -70,6 +75,17 @@
               </tr>
             </thead>
             <tbody id="list-you"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap your-cards-from-log hidden" id="your-cards-from-log-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Card</th>
+                <th class="num">Count</th>
+              </tr>
+            </thead>
+            <tbody id="list-you-from-log"></tbody>
           </table>
         </div>
       </section>
@@ -96,7 +112,10 @@
           </div>
         </div>
 
-        <textarea id="input-opp" placeholder="Paste opponent decklist (or a guessed list)"></textarea>
+        <div class="deck-paste">
+          <label for="input-opp" class="deck-label">Opponent decklist</label>
+          <textarea id="input-opp" class="deck-input" placeholder="Paste opponent list or a guessed list (same format)"></textarea>
+        </div>
 
         <div class="panel-actions">
           <input id="new-preset-name-opp" class="control" placeholder="New preset name..." />
@@ -129,7 +148,7 @@
     </div>
 
     <div class="footer">
-      Auto log tracks only "played CARD" lines from tcg-arena chat. Anything else is ignored.
+      Auto log tracks "played" and "revealed" from tcg-arena chat. If Auto log stays off or you see "Extension context invalidated", <strong>reload the tcg-arena tab (F5)</strong> after updating the extension.
     </div>
   </div>
 

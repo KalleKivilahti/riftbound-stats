@@ -60,6 +60,14 @@ async function loadGames() {
   return arr.filter(g => g && (g.result === "win" || g.result === "loss") && Array.isArray(g.cardsPlayed));
 }
 
+// Manual heroes for now
+const OPPONENT_HEROES = [
+  "Irelia", "Fiora", "Ezreal", "Lucian", "Rumble", "Ornn",
+  "Annie", "Master Yi", "Lux", "Garen", "Ahri", "Darius",
+  "Jinx", "Kai'Sa", "Lee Sin", "Miss Fortune", "Sett", "Teemo",
+  "Viktor", "Volibear", "Yasuo"
+];
+
 async function saveGames(games) {
   await chrome.storage.local.set({ [STORAGE_KEY_GAMES]: games });
 }
@@ -192,6 +200,12 @@ function findCard(deck, incomingName) {
   return c ?? null;
 }
 
+function escapeHtml(s) {
+  const div = document.createElement("div");
+  div.textContent = s;
+  return div.innerHTML;
+}
+
 // ---------- Core ----------
 function parseDeck(text) {
   const lines = String(text).split("\n").map(l => l.trim()).filter(Boolean);
@@ -233,26 +247,52 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
-/** Snapshot of cards played this game from "your deck" (total - left for each). */
 function getCardsPlayedThisGame() {
+  if (yourCardsPlayedThisGame.length) return yourCardsPlayedThisGame.slice();
   if (!deckYou.length) return [];
   return deckYou
     .filter(c => c.total > c.left)
     .map(c => ({ name: c.name, count: c.total - c.left }));
 }
 
+function getOpponentCardsPlayedThisGame() {
+  return opponentCardsPlayedThisGame.slice();
+}
+
 async function recordGame(result) {
   const cardsPlayed = getCardsPlayedThisGame();
   const games = await loadGames();
+  const opponentHeroEl = $("opponent-hero");
   games.push({
     date: new Date().toISOString(),
     result,
     cardsPlayed,
-    deckName: getPresetById($("preset-you").value)?.name ?? null
+    deckName: getPresetById($("preset-you").value)?.name ?? null,
+    playerName: myName || null,
+    opponentCardsPlayed: getOpponentCardsPlayedThisGame(),
+    battlefield: currentBattlefield || null,
+    opponentHero: opponentHeroEl && opponentHeroEl.value ? opponentHeroEl.value : null,
+    turnCount: currentTurnCount ?? null
   });
   await saveGames(games);
+  yourCardsPlayedThisGame.length = 0;
+  opponentCardsPlayedThisGame.length = 0;
+  currentBattlefield = null;
+  currentTurnCount = null;
   updateRecordedCount();
+  updateGameMetaDisplay();
   renderAll();
+}
+
+function updateGameMetaDisplay() {
+  const el = $("game-meta");
+  if (!el) return;
+  const parts = [];
+  if (currentBattlefield) parts.push("Battlefield: " + currentBattlefield);
+  if (currentTurnCount != null) parts.push("Turns: " + currentTurnCount);
+  if (yourCardsPlayedThisGame.length) parts.push("Your cards: " + yourCardsPlayedThisGame.length);
+  if (opponentCardsPlayedThisGame.length) parts.push("Opp cards: " + opponentCardsPlayedThisGame.length);
+  el.textContent = parts.length ? parts.join(" · ") : "";
 }
 
 function updateRecordedCount() {
@@ -281,69 +321,83 @@ let filterYou = "";
 let filterOpp = "";
 let oppHand = 0;
 let myName = "";
+let currentBattlefield = null;
+let currentTurnCount = null;
+let yourCardsPlayedThisGame = [];
+let opponentCardsPlayedThisGame = [];
 
 // ---------- Render ----------
 function renderYou() {
-  const deckLeft = totalLeft(deckYou);
-  $("stats-you").textContent = deckYou.length ? `Cards left: ${deckLeft}` : "";
+  const deckWrap = $("your-deck-wrap");
+  const fromLogWrap = $("your-cards-from-log-wrap");
+  const listFromLog = $("list-you-from-log");
+  const statsEl = $("stats-you");
 
-  const list = $("list-you");
-  list.innerHTML = "";
+  if (deckYou.length > 0) {
+    const deckLeft = totalLeft(deckYou);
+    if (statsEl) statsEl.textContent = `Cards left: ${deckLeft}`;
+    if (deckWrap) deckWrap.classList.remove("hidden");
+    if (fromLogWrap) fromLogWrap.classList.add("hidden");
 
-  const f = filterYou.trim().toLowerCase();
-  const shown = f ? deckYou.filter(c => c.name.toLowerCase().includes(f)) : deckYou;
+    const list = $("list-you");
+    list.innerHTML = "";
+    const f = filterYou.trim().toLowerCase();
+    const shown = f ? deckYou.filter(c => c.name.toLowerCase().includes(f)) : deckYou;
 
-  for (const c of shown) {
-    const tr = document.createElement("tr");
-
-    const tdName = document.createElement("td");
-    tdName.className = "cardname";
-    tdName.textContent = c.name;
-    if (c.left <= 0) tdName.classList.add("crossed");
-
-    const tdLeft = document.createElement("td");
-    tdLeft.className = "num";
-    tdLeft.textContent = `${c.left} / ${c.total}`;
-
-    const tdPct = document.createElement("td");
-    tdPct.className = "num";
-    const pct = nextDrawPct(c.left, deckLeft);
-    const pctSpan = document.createElement("span");
-    pctSpan.className = `pct ${heatClass(pct)}`;
-    pctSpan.textContent = pct.toFixed(0) + "%";
-    tdPct.appendChild(pctSpan);
-
-    const tdMinus = document.createElement("td");
-    tdMinus.className = "num";
-    const bMinus = document.createElement("button");
-    bMinus.className = "btn";
-    bMinus.textContent = "-";
-    bMinus.addEventListener("click", () => {
-      if (c.left <= 0) return;
-      c.left -= 1;
-      renderAll();
-    });
-    tdMinus.appendChild(bMinus);
-
-    const tdPlus = document.createElement("td");
-    tdPlus.className = "num";
-    const bPlus = document.createElement("button");
-    bPlus.className = "btn";
-    bPlus.textContent = "+";
-    bPlus.addEventListener("click", () => {
-      if (c.left >= c.total) return;
-      c.left += 1;
-      renderAll();
-    });
-    tdPlus.appendChild(bPlus);
-
-    tr.appendChild(tdName);
-    tr.appendChild(tdLeft);
-    tr.appendChild(tdPct);
-    tr.appendChild(tdMinus);
-    tr.appendChild(tdPlus);
-
-    list.appendChild(tr);
+    for (const c of shown) {
+      const tr = document.createElement("tr");
+      const tdName = document.createElement("td");
+      tdName.className = "cardname";
+      tdName.textContent = c.name;
+      if (c.left <= 0) tdName.classList.add("crossed");
+      const tdLeft = document.createElement("td");
+      tdLeft.className = "num";
+      tdLeft.textContent = `${c.left} / ${c.total}`;
+      const tdPct = document.createElement("td");
+      tdPct.className = "num";
+      const pct = nextDrawPct(c.left, deckLeft);
+      const pctSpan = document.createElement("span");
+      pctSpan.className = `pct ${heatClass(pct)}`;
+      pctSpan.textContent = pct.toFixed(0) + "%";
+      tdPct.appendChild(pctSpan);
+      const tdMinus = document.createElement("td");
+      tdMinus.className = "num";
+      const bMinus = document.createElement("button");
+      bMinus.className = "btn";
+      bMinus.textContent = "-";
+      bMinus.addEventListener("click", () => { if (c.left <= 0) return; c.left -= 1; renderAll(); });
+      tdMinus.appendChild(bMinus);
+      const tdPlus = document.createElement("td");
+      tdPlus.className = "num";
+      const bPlus = document.createElement("button");
+      bPlus.className = "btn";
+      bPlus.textContent = "+";
+      bPlus.addEventListener("click", () => { if (c.left >= c.total) return; c.left += 1; renderAll(); });
+      tdPlus.appendChild(bPlus);
+      tr.appendChild(tdName); tr.appendChild(tdLeft); tr.appendChild(tdPct); tr.appendChild(tdMinus); tr.appendChild(tdPlus);
+      list.appendChild(tr);
+    }
+  } else {
+    if (deckWrap) deckWrap.classList.add("hidden");
+    if (yourCardsPlayedThisGame.length > 0) {
+      if (statsEl) statsEl.textContent = "Your cards played (from log): " + yourCardsPlayedThisGame.length + " card types";
+      if (fromLogWrap) {
+        fromLogWrap.classList.remove("hidden");
+        if (listFromLog) {
+          listFromLog.innerHTML = "";
+          const f = filterYou.trim().toLowerCase();
+          const shown = f ? yourCardsPlayedThisGame.filter(c => c.name.toLowerCase().includes(f)) : yourCardsPlayedThisGame;
+          for (const c of shown) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = "<td class=\"cardname\">" + escapeHtml(c.name) + "</td><td class=\"num\">" + c.count + "</td>";
+            listFromLog.appendChild(tr);
+          }
+        }
+      }
+    } else {
+      if (statsEl) statsEl.textContent = "No deck loaded. Paste list or play cards on tcg-arena (log will fill this).";
+      if (fromLogWrap) fromLogWrap.classList.add("hidden");
+    }
   }
 }
 
@@ -507,6 +561,22 @@ function updateDeleteButtons() {
   $("delete-preset-opp").disabled = !(po && po.isCustom);
 }
 
+function fillOpponentHeroSelect(selectEl) {
+  if (!selectEl) return;
+  const first = selectEl.querySelector("option");
+  selectEl.innerHTML = "";
+  const empty = document.createElement("option");
+  empty.value = "";
+  empty.textContent = "Opponent hero (optional)";
+  selectEl.appendChild(empty);
+  for (const h of OPPONENT_HEROES) {
+    const opt = document.createElement("option");
+    opt.value = h;
+    opt.textContent = h;
+    selectEl.appendChild(opt);
+  }
+}
+
 // Event Listener
 $("use-preset-you").addEventListener("click", () => applyPresetTo("you"));
 $("use-preset-opp").addEventListener("click", () => applyPresetTo("opp"));
@@ -554,6 +624,10 @@ $("reset").addEventListener("click", () => {
   filterYou = "";
   filterOpp = "";
   oppHand = 0;
+  currentBattlefield = null;
+  currentTurnCount = null;
+  yourCardsPlayedThisGame = [];
+  opponentCardsPlayedThisGame = [];
 
   $("input-you").value = "";
   $("input-opp").value = "";
@@ -564,7 +638,10 @@ $("reset").addEventListener("click", () => {
   $("preset-opp").value = "";
   $("new-preset-name-you").value = "";
   $("new-preset-name-opp").value = "";
+  const oppHero = $("opponent-hero");
+  if (oppHero) oppHero.value = "";
 
+  updateGameMetaDisplay();
   renderAll();
 });
 
@@ -590,25 +667,54 @@ chrome.runtime.onMessage.addListener((msg) => {
     return;
   }
 
-  if (msg.type !== "rb_log_event") return;
+  if (msg.type === "rb_battlefield") {
+    currentBattlefield = msg.battlefield || null;
+    updateGameMetaDisplay();
+    return;
+  }
 
-  const { side, delta, cardName } = msg;
-  if (delta !== -1) return;
+  if (msg.type === "rb_turn_count") {
+    const n = typeof msg.turnCount === "number" ? msg.turnCount : null;
+    if (n != null && n >= 1 && n <= 999) currentTurnCount = n;
+    updateGameMetaDisplay();
+    return;
+  }
 
-  const targets = side === "you" ? ["you"] : side === "opp" ? ["opp"] : ["opp", "you"];
+  if (msg.type === "rb_log_event") {
+    const { side, delta, cardName } = msg;
+    if (delta === -1 && cardName) {
+      if (side === "you") {
+        const existing = yourCardsPlayedThisGame.find(c => normName(c.name) === normName(cardName));
+        if (existing) existing.count += 1;
+        else yourCardsPlayedThisGame.push({ name: cardName, count: 1 });
+        updateGameMetaDisplay();
+      } else if (side === "opp") {
+        const existing = opponentCardsPlayedThisGame.find(c => normName(c.name) === normName(cardName));
+        if (existing) existing.count += 1;
+        else opponentCardsPlayedThisGame.push({ name: cardName, count: 1 });
+        updateGameMetaDisplay();
+      }
+    }
 
-  for (const t of targets) {
-    const deck = t === "you" ? deckYou : deckOpp;
-    if (!deck || !deck.length) continue;
+    if (delta !== -1) return;
 
-    const card = findCard(deck, cardName);
-    if (!card) continue;
+    const targets = side === "you" ? ["you"] : side === "opp" ? ["opp"] : ["opp", "you"];
 
-    const next = card.left + delta;
-    if (next < 0 || next > card.total) return;
+    for (const t of targets) {
+      const deck = t === "you" ? deckYou : deckOpp;
+      if (!deck || !deck.length) continue;
 
-    card.left = next;
-    renderAll();
+      const card = findCard(deck, cardName);
+      if (!card) continue;
+
+      const next = card.left + delta;
+      if (next < 0 || next > card.total) return;
+
+      card.left = next;
+      renderAll();
+      return;
+    }
+    if (side === "you" || side === "opp") renderAll();
     return;
   }
 });
@@ -626,6 +732,8 @@ chrome.runtime.onMessage.addListener((msg) => {
 
   chrome.runtime.sendMessage({ type: "rb_ping_tabs" });
 
+  fillOpponentHeroSelect($("opponent-hero"));
   updateRecordedCount();
+  updateGameMetaDisplay();
   renderAll();
 })();

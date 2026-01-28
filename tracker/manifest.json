@@ -17,8 +17,8 @@
   "content_scripts": [
     {
       "matches": [
-        "*://tcg-arena.fr/*",
-        "*://www.tcg-arena.fr/*"
+        "*://tcg-arena.fr/play*",
+        "*://www.tcg-arena.fr/play*"
       ],
       "js": ["tcg_observer.js"],
       "run_at": "document_idle"
