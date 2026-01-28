@@ -10,35 +10,14 @@
 <body>
   <header class="header">
     <div class="header-inner">
-      <h1 class="logo">Riftbound Secret Stats</h1>
-      <p class="tagline">To farm Best Ofs</p>
+      <a href="index.html" class="logo-link">Riftbound Secret Stats</a>
+      <nav class="header-nav">
+        <a href="import.html" class="btn btn-ghost">Import</a>
+      </nav>
     </div>
   </header>
 
   <main class="main">
-    <section class="import-section" id="import-section">
-      <div class="import-card" id="drop-zone">
-        <div class="import-content">
-          <div class="import-icon" aria-hidden="true">Import</div>
-          <h2>Import your data</h2>
-          <p>Export JSON from the Riftbound Tracker extension, then drop the file here or paste below.</p>
-          <label class="file-label">
-            <input type="file" id="file-input" accept=".json,application/json" class="file-input" />
-            Choose file
-          </label>
-        </div>
-      </div>
-      <div class="import-raw">
-        <label for="json-input">Or paste JSON</label>
-        <textarea id="json-input" placeholder="Paste content of riftbound-stats-*.json here"></textarea>
-        <div class="import-actions">
-          <button type="button" class="btn btn-primary" id="btn-apply">Load data</button>
-          <button type="button" class="btn btn-ghost" id="btn-clear-data">Clear stored data</button>
-        </div>
-      </div>
-      <p class="error" id="error" aria-live="polite"></p>
-    </section>
-
     <section class="dashboard hidden" id="dashboard">
       <div class="overview">
         <div class="stat-card">
@@ -112,7 +91,7 @@
 
       <div class="cards-section opp-cards-section">
         <div class="cards-header">
-          <h3>Opponent cards – winrate when opp played</h3>
+          <h3>Opponent cards – your winrate when they play it (by how many times)</h3>
           <input type="search" id="opp-card-search" class="search-input" placeholder="Search opponent cards" />
         </div>
         <div class="table-wrap">
@@ -120,6 +99,7 @@
             <thead>
               <tr>
                 <th class="col-name">Card</th>
+                <th class="col-num">Times opp played</th>
                 <th class="col-num">Games</th>
                 <th class="col-num">Wins</th>
                 <th class="col-num">Winrate</th>
@@ -132,7 +112,7 @@
     </section>
 
     <section class="empty-state" id="empty-state">
-      <p>Upload a JSON from Tracker</p>
+      <p>No data yet. <a href="import.html" class="empty-state-link">Import</a> a JSON from the Tracker to see stats.</p>
     </section>
   </main>
 

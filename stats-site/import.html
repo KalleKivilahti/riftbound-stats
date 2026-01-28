@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Import – Riftbound Secret Stats</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo-link">Riftbound Secret Stats</a>
+      <nav class="header-nav">
+        <a href="index.html" class="btn btn-ghost">View stats</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="import-section" id="import-section">
+      <div class="import-card" id="drop-zone">
+        <div class="import-content">
+          <div class="import-icon" aria-hidden="true">Import</div>
+          <h2>Import your data</h2>
+          <p>Export JSON from the Riftbound Tracker extension, then drop the file here or paste below.</p>
+          <label class="file-label">
+            <input type="file" id="file-input" accept=".json,application/json" class="file-input" />
+            Choose file
+          </label>
+        </div>
+      </div>
+      <div class="import-raw">
+        <label for="json-input">Or paste JSON</label>
+        <textarea id="json-input" placeholder="Paste content of riftbound-stats-*.json here"></textarea>
+        <div class="import-actions">
+          <button type="button" class="btn btn-primary" id="btn-apply">Load data</button>
+          <button type="button" class="btn btn-ghost" id="btn-clear-data">Clear stored data</button>
+          <a href="index.html" class="btn btn-primary" id="view-stats-link" style="display: none;">View stats</a>
+        </div>
+      </div>
+      <p class="error" id="error" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Data is stored in your browser. Open the stats page to see filters and winrates.</p>
+  </footer>
+
+  <script src="import-page.js"></script>
+</body>
+</html>

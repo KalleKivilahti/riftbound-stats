@@ -112,31 +112,47 @@
     return { total, wins, rows };
   }
 
+  /** Bucket: 1x, 2x, 3x+ so we see how YOUR winrate changes when they play a card 1 vs 2 vs 3+ times. */
+  function timesPlayedBucket(count) {
+    const n = Math.max(0, Number(count) || 0);
+    if (n <= 1) return "1x";
+    if (n === 2) return "2x";
+    return "3x+";
+  }
+
   function buildOpponentCardStats(games) {
     const filtered = getFilteredGames(games);
-    const byCard = new Map();
+    const byKey = new Map();
     for (const game of filtered) {
       const isWin = game.result === "win";
       const cards = game.opponentCardsPlayed || [];
       for (const entry of cards) {
         const name = (entry.name || "").trim();
         if (!name) continue;
-        if (!byCard.has(name)) {
-          byCard.set(name, { gamesPlayed: 0, winsWhenPlayed: 0 });
+        const bucket = timesPlayedBucket(entry.count);
+        const key = name + "\n" + bucket;
+        if (!byKey.has(key)) {
+          byKey.set(key, { cardName: name, timesPlayed: bucket, gamesPlayed: 0, winsWhenPlayed: 0 });
         }
-        const rec = byCard.get(name);
+        const rec = byKey.get(key);
         rec.gamesPlayed += 1;
         if (isWin) rec.winsWhenPlayed += 1;
       }
     }
-    return Array.from(byCard.entries())
-      .map(([name, rec]) => ({
-        name,
+    return Array.from(byKey.values())
+      .map((rec) => ({
+        name: rec.cardName,
+        timesPlayed: rec.timesPlayed,
         gamesPlayed: rec.gamesPlayed,
         winsWhenPlayed: rec.winsWhenPlayed,
         winrate: rec.gamesPlayed ? (100 * rec.winsWhenPlayed) / rec.gamesPlayed : 0,
       }))
-      .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+      .sort((a, b) => {
+        const nameCmp = (a.name || "").localeCompare(b.name || "");
+        if (nameCmp !== 0) return nameCmp;
+        const order = { "1x": 0, "2x": 1, "3x+": 2 };
+        return (order[a.timesPlayed] ?? 0) - (order[b.timesPlayed] ?? 0);
+      });
   }
 
   function buildTurnStats(games) {
@@ -287,13 +303,14 @@
     let rows = oppRows;
     if (oppCardFilterQuery.trim()) {
       const q = oppCardFilterQuery.trim().toLowerCase();
-      rows = rows.filter((r) => r.name.toLowerCase().includes(q));
+      rows = rows.filter((r) => (r.name || "").toLowerCase().includes(q));
     }
     tbody.innerHTML = "";
     for (const row of rows) {
       const tr = document.createElement("tr");
       tr.innerHTML =
         "<td class=\"col-name\">" + escapeHtml(row.name) + "</td>" +
+        "<td class=\"col-num\">" + escapeHtml(row.timesPlayed || "") + "</td>" +
         "<td class=\"col-num\">" + row.gamesPlayed + "</td>" +
         "<td class=\"col-num\">" + row.winsWhenPlayed + "</td>" +
         "<td class=\"col-num " + wrClass(row.winrate) + "\">" + row.winrate.toFixed(1) + "%</td>";
@@ -382,24 +399,22 @@
   }
 
   if ($("btn-apply")) {
-    $("btn-apply").addEventListener("click", () => run(jsonInput.value.trim()));
+    $("btn-apply").addEventListener("click", () => run(jsonInput && jsonInput.value.trim()));
   }
   if ($("btn-clear-data")) {
-    $("btn-clear-data").addEventListener("click", () => {
-      clearStored();
-    });
+    $("btn-clear-data").addEventListener("click", () => clearStored());
   }
-
-  jsonInput.addEventListener("input", () => run(jsonInput.value.trim()));
-  jsonInput.addEventListener("paste", () => setTimeout(() => run(jsonInput.value.trim()), 0));
-
+  if (jsonInput) {
+    jsonInput.addEventListener("input", () => run(jsonInput.value.trim()));
+    jsonInput.addEventListener("paste", () => setTimeout(() => run(jsonInput.value.trim()), 0));
+  }
   if (fileInput) {
     fileInput.addEventListener("change", () => {
       const f = fileInput.files && fileInput.files[0];
       if (!f) return;
       const r = new FileReader();
       r.onload = () => {
-        jsonInput.value = r.result;
+        if (jsonInput) jsonInput.value = r.result;
         run(r.result);
       };
       r.readAsText(f);
@@ -454,7 +469,7 @@
     });
   }
 
-  var dropZone = $("drop-zone");
+  const dropZone = $("drop-zone");
   if (dropZone) {
     ["dragenter", "dragover", "dragleave", "drop"].forEach((ev) => {
       dropZone.addEventListener(ev, (e) => {
@@ -473,7 +488,7 @@
       }
       const r = new FileReader();
       r.onload = () => {
-        jsonInput.value = r.result;
+        if (jsonInput) jsonInput.value = r.result;
         run(r.result);
       };
       r.readAsText(f);
