@@ -129,15 +129,16 @@
   let currentObserver = null;
   let currentContainer = null;
 
-  function startObserver(container) {
+  function startObserver(container, options) {
     if (!container) return;
+    const doInitialScan = options && options.initialScan !== false;
     if (currentObserver) {
       currentObserver.disconnect();
       currentObserver = null;
     }
     currentContainer = container;
 
-    console.log("[Riftbound] Observer starting on:", container?.className || container?.id || "unknown");
+    console.log("[Riftbound] Observer starting on:", container?.className || container?.id || "unknown", doInitialScan ? "(with initial scan)" : "(no initial scan)");
 
     const observer = new MutationObserver((mutations) => {
       if (contextInvalidated) return;
@@ -162,10 +163,12 @@
     });
     currentObserver = observer;
 
-    console.log("[Riftbound] Initial scan...");
-    try {
-      container.querySelectorAll("div, p, span, li, article").forEach(handlePossibleLine);
-    } catch (e) {}
+    if (doInitialScan) {
+      console.log("[Riftbound] Initial scan...");
+      try {
+        container.querySelectorAll("div, p, span, li, article").forEach(handlePossibleLine);
+      } catch (e) {}
+    }
   }
 
   // Check for the container if its disconnected
@@ -177,8 +180,8 @@
       currentContainer = null;
       const container = findChatContainer();
       if (container) {
-        console.log("[Riftbound] Chat container was replaced – re-attaching observer.");
-        startObserver(container);
+        console.log("[Riftbound] Chat container was replaced – re-attaching observer (no rescan).");
+        startObserver(container, { initialScan: false });
       }
     }
   }

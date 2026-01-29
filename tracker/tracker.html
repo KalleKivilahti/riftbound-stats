@@ -61,6 +61,14 @@
           <button id="record-loss">Record loss</button>
           <button id="export-data">Export data</button>
           <a id="open-stats" href="#" target="_blank" rel="noopener">View stats</a>
+          <span id="supabase-status" class="badge supabase-status" title="Supabase sync"></span>
+        </div>
+        <div class="supabase-config">
+          <label class="deck-label">Supabase – set once so Record win/loss INSERTs to your DB</label>
+          <input id="supabase-url" class="control" placeholder="Project URL: https://xxx.supabase.co" />
+          <input id="supabase-key" class="control" type="password" placeholder="Anon key (Legacy), then Save" autocomplete="off" />
+          <button id="supabase-save" class="btn">Save</button>
+          <p class="stats-hint">Stored in extension only (Netlify env is for server-side). After Save, each Record win/loss POSTs to Supabase.</p>
         </div>
 
         <div class="table-wrap" id="your-deck-wrap">

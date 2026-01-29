@@ -1,5 +1,8 @@
 const $ = (id) => document.getElementById(id);
 
+const SUPABASE_DEFAULT_URL = "https://hmdboowggoinfxgttrum.supabase.co";
+const SUPABASE_DEFAULT_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtZGJvb3dnZ29pbmZ4Z3R0cnVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2ODQ2MjYsImV4cCI6MjA4NTI2MDYyNn0.o7U9TggOZIbt8-duT85pXAMjxHnM5WpgMgIXKVUUOIw";
+
 // ---------- Default presets (examples, not deletable) ----------
 const DEFAULT_PRESETS = [
   {
@@ -26,6 +29,8 @@ const DEFAULT_PRESETS = [
 const STORAGE_KEY_PRESETS = "customPresets";
 const STORAGE_KEY_MYNAME = "rb_myName";
 const STORAGE_KEY_GAMES = "rb_games";
+const STORAGE_KEY_SUPABASE_URL = "rb_supabaseUrl";
+const STORAGE_KEY_SUPABASE_KEY = "rb_supabaseKey";
 
 async function loadCustomPresets() {
   const data = await chrome.storage.local.get([STORAGE_KEY_PRESETS]);
@@ -70,6 +75,23 @@ const OPPONENT_HEROES = [
 
 async function saveGames(games) {
   await chrome.storage.local.set({ [STORAGE_KEY_GAMES]: games });
+}
+
+async function loadSupabaseConfig() {
+  const data = await chrome.storage.local.get([STORAGE_KEY_SUPABASE_URL, STORAGE_KEY_SUPABASE_KEY]);
+  const url = (data[STORAGE_KEY_SUPABASE_URL] || "").trim();
+  const key = (data[STORAGE_KEY_SUPABASE_KEY] || "").trim();
+  return {
+    url: url || (SUPABASE_DEFAULT_URL || "").trim(),
+    key: key || (SUPABASE_DEFAULT_KEY || "").trim()
+  };
+}
+
+async function saveSupabaseConfig(url, key) {
+  await chrome.storage.local.set({
+    [STORAGE_KEY_SUPABASE_URL]: (url || "").trim(),
+    [STORAGE_KEY_SUPABASE_KEY]: (key || "").trim()
+  });
 }
 
 // ---------- Preset State ----------
@@ -261,20 +283,24 @@ function getOpponentCardsPlayedThisGame() {
 
 async function recordGame(result) {
   const cardsPlayed = getCardsPlayedThisGame();
-  const games = await loadGames();
+  const opponentCardsPlayed = getOpponentCardsPlayedThisGame();
   const opponentHeroEl = $("opponent-hero");
-  games.push({
+  const gamePayload = {
     date: new Date().toISOString(),
     result,
     cardsPlayed,
     deckName: getPresetById($("preset-you").value)?.name ?? null,
     playerName: myName || null,
-    opponentCardsPlayed: getOpponentCardsPlayedThisGame(),
+    opponentCardsPlayed,
     battlefield: currentBattlefield || null,
     opponentHero: opponentHeroEl && opponentHeroEl.value ? opponentHeroEl.value : null,
     turnCount: currentTurnCount ?? null
-  });
+  };
+
+  const games = await loadGames();
+  games.push(gamePayload);
   await saveGames(games);
+
   yourCardsPlayedThisGame.length = 0;
   opponentCardsPlayedThisGame.length = 0;
   currentBattlefield = null;
@@ -282,6 +308,73 @@ async function recordGame(result) {
   updateRecordedCount();
   updateGameMetaDisplay();
   renderAll();
+
+  submitGameToSupabase(gamePayload).catch((err) => {
+    console.warn("[Riftbound] Supabase submit failed:", err);
+    const el = $("supabase-status");
+    if (el) { el.textContent = "Sync failed"; el.classList.add("supabase-err"); }
+  });
+}
+
+async function submitGameToSupabase(gamePayload) {
+  const { url, key } = await loadSupabaseConfig();
+  if (!url || !key) return;
+
+  const playedAt = gamePayload.date ? new Date(gamePayload.date).toISOString() : new Date().toISOString();
+  const gameRow = {
+    player_name: gamePayload.playerName || "",
+    result: gamePayload.result,
+    deck_name: gamePayload.deckName || null,
+    battlefield: gamePayload.battlefield || null,
+    legendary: null,
+    opponent_legend: gamePayload.opponentHero || null,
+    turn_count: gamePayload.turnCount ?? null,
+    played_at: playedAt
+  };
+
+  const res = await fetch(url.replace(/\/$/, "") + "/rest/v1/games", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": key,
+      "Authorization": "Bearer " + key,
+      "Prefer": "return=representation"
+    },
+    body: JSON.stringify(gameRow)
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(res.status + " " + text);
+  }
+  const inserted = await res.json();
+  const gameId = Array.isArray(inserted) ? inserted[0]?.id : inserted?.id;
+  if (gameId == null) throw new Error("No game id returned");
+
+  const cardRows = [];
+  (gamePayload.cardsPlayed || []).forEach((c) => {
+    cardRows.push({ game_id: gameId, side: "you", card_name: c.name || "", count: Math.max(1, Number(c.count) || 1) });
+  });
+  (gamePayload.opponentCardsPlayed || []).forEach((c) => {
+    cardRows.push({ game_id: gameId, side: "opp", card_name: c.name || "", count: Math.max(1, Number(c.count) || 1) });
+  });
+  if (cardRows.length) {
+    const cardRes = await fetch(url.replace(/\/$/, "") + "/rest/v1/game_cards", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": key,
+        "Authorization": "Bearer " + key
+      },
+      body: JSON.stringify(cardRows)
+    });
+    if (!cardRes.ok) {
+      const text = await cardRes.text();
+      throw new Error("game_cards " + cardRes.status + " " + text);
+    }
+  }
+
+  const el = $("supabase-status");
+  if (el) { el.textContent = "Synced"; el.classList.remove("supabase-err"); }
 }
 
 function updateGameMetaDisplay() {
@@ -735,5 +828,20 @@ chrome.runtime.onMessage.addListener((msg) => {
   fillOpponentHeroSelect($("opponent-hero"));
   updateRecordedCount();
   updateGameMetaDisplay();
+
+  const supabaseUrlEl = $("supabase-url");
+  const supabaseKeyEl = $("supabase-key");
+  loadSupabaseConfig().then(({ url, key }) => {
+    if (supabaseUrlEl) supabaseUrlEl.value = url;
+    if (supabaseKeyEl) supabaseKeyEl.value = key;
+  });
+  $("supabase-save").addEventListener("click", async () => {
+    const url = (supabaseUrlEl && supabaseUrlEl.value || "").trim();
+    const key = (supabaseKeyEl && supabaseKeyEl.value || "").trim();
+    await saveSupabaseConfig(url, key);
+    const st = $("supabase-status");
+    if (st) { st.textContent = url && key ? "Saved" : ""; st.classList.remove("supabase-err"); }
+  });
+
   renderAll();
 })();

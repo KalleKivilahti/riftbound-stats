@@ -80,6 +80,14 @@ body {
   padding: 0.25rem 0.5rem;
 }
 .badge.game-meta { margin-left: 0.5rem; }
+.supabase-status { margin-left: 0.5rem; }
+.supabase-status.supabase-err { color: var(--red); }
+
+.supabase-config { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+.supabase-config .deck-label { margin-bottom: 0.35rem; }
+.supabase-config input.control { max-width: 320px; margin-right: 0.5rem; margin-bottom: 0.35rem; display: block; }
+.supabase-config input.control + input.control { margin-top: 0.25rem; }
+.supabase-config .btn { margin-top: 0.25rem; }
 
 button, .btn {
   padding: 0.5rem 0.9rem;
