@@ -12,9 +12,7 @@
       <div class="title">Riftbound Deck Tracker</div>
 
       <div class="top-right">
-        <input id="my-name" class="control small" placeholder="My name (exact)" />
-        <span id="auto-status" class="badge">Auto log: ...</span>
-        <button id="reset">Reset</button>
+        <input id="my-name" class="control small" placeholder="TCGA Nick" />
       </div>
     </div>
 
@@ -22,19 +20,38 @@
       <!-- YOU -->
       <section class="panel">
         <div class="panel-head">
-          <h2>Your deck</h2>
+          <h2>Your Cards</h2>
           <div class="stats" id="stats-you"></div>
         </div>
-
-        <textarea id="input-you" class="deck-input hidden" aria-hidden="true"></textarea>
-
         <div class="panel-actions">
-          <button id="undo-you">Undo</button>
           <input id="search-you" class="control" placeholder="Search card..." />
         </div>
 
         <div class="panel-actions">
-          <select id="opponent-hero" class="control" title="Opponent hero (manual – cannot auto-detect)"></select>
+          <select id="opponent-hero" class="control" title="Opponent hero (manual – cannot auto-detect)">
+            <option value="">Opponents Legend</option>
+            <option value="Irelia">Irelia</option>
+            <option value="Fiora">Fiora</option>
+            <option value="Ezreal">Ezreal</option>
+            <option value="Lucian">Lucian</option>
+            <option value="Rumble">Rumble</option>
+            <option value="Ornn">Ornn</option>
+            <option value="Annie">Annie</option>
+            <option value="Master Yi">Master Yi</option>
+            <option value="Lux">Lux</option>
+            <option value="Garen">Garen</option>
+            <option value="Ahri">Ahri</option>
+            <option value="Darius">Darius</option>
+            <option value="Jinx">Jinx</option>
+            <option value="Kai'Sa">Kai'Sa</option>
+            <option value="Lee Sin">Lee Sin</option>
+            <option value="Miss Fortune">Miss Fortune</option>
+            <option value="Sett">Sett</option>
+            <option value="Teemo">Teemo</option>
+            <option value="Viktor">Viktor</option>
+            <option value="Volibear">Volibear</option>
+            <option value="Yasuo">Yasuo</option>
+          </select>
           <span id="game-meta" class="badge game-meta"></span>
         </div>
         <div class="panel-actions">
@@ -76,23 +93,11 @@
       <!-- OPP -->
       <section class="panel">
         <div class="panel-head">
-          <h2>Opponent deck</h2>
+          <h2>Opponents cards</h2>
           <div class="stats" id="stats-opp"></div>
         </div>
 
         <div class="panel-actions">
-          <div class="handbox">
-            <span class="handlabel">Opp hand</span>
-            <button class="btn small" id="hand-minus">-</button>
-            <span class="handnum" id="hand-value">0</span>
-            <button class="btn small" id="hand-plus">+</button>
-          </div>
-        </div>
-
-        <textarea id="input-opp" class="deck-input hidden" aria-hidden="true"></textarea>
-
-        <div class="panel-actions">
-          <button id="undo-opp">Undo</button>
           <input id="search-opp" class="control" placeholder="Search card..." />
         </div>
 
