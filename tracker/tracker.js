@@ -285,11 +285,12 @@ async function recordGame(result) {
   const cardsPlayed = getCardsPlayedThisGame();
   const opponentCardsPlayed = getOpponentCardsPlayedThisGame();
   const opponentHeroEl = $("opponent-hero");
+  const presetYouEl = $("preset-you");
   const gamePayload = {
     date: new Date().toISOString(),
     result,
     cardsPlayed,
-    deckName: getPresetById($("preset-you").value)?.name ?? null,
+    deckName: (presetYouEl && getPresetById(presetYouEl.value)?.name) ?? null,
     playerName: myName || null,
     opponentCardsPlayed,
     battlefield: currentBattlefield || null,
@@ -433,6 +434,7 @@ function renderYou() {
     if (fromLogWrap) fromLogWrap.classList.add("hidden");
 
     const list = $("list-you");
+    if (!list) return;
     list.innerHTML = "";
     const f = filterYou.trim().toLowerCase();
     const shown = f ? deckYou.filter(c => c.name.toLowerCase().includes(f)) : deckYou;
@@ -488,7 +490,6 @@ function renderYou() {
         }
       }
     } else {
-      if (statsEl) statsEl.textContent = "No deck loaded. Paste list or play cards on tcg-arena (log will fill this).";
       if (fromLogWrap) fromLogWrap.classList.add("hidden");
     }
   }
@@ -496,9 +497,11 @@ function renderYou() {
 
 function renderOpp() {
   const deckLeft = totalLeft(deckOpp);
-  $("stats-opp").textContent = deckOpp.length ? `Cards left: ${deckLeft} | Hand: ${oppHand}` : "";
+  const statsOppEl = $("stats-opp");
+  if (statsOppEl) statsOppEl.textContent = deckOpp.length ? `Cards left: ${deckLeft} | Hand: ${oppHand}` : "";
 
   const list = $("list-opp");
+  if (!list) return;
   list.innerHTML = "";
 
   const f = filterOpp.trim().toLowerCase();
@@ -665,7 +668,7 @@ function fillOpponentHeroSelect(selectEl) {
   selectEl.innerHTML = "";
   const empty = document.createElement("option");
   empty.value = "";
-  empty.textContent = "Opponent hero (optional)";
+  empty.textContent = "Opponents legend";
   selectEl.appendChild(empty);
   for (const h of OPPONENT_HEROES) {
     const opt = document.createElement("option");
@@ -706,67 +709,92 @@ if (startOppEl) startOppEl.addEventListener("click", () => {
   renderAll();
 });
 
-$("search-you").addEventListener("input", (e) => { filterYou = e.target.value ?? ""; renderYou(); });
-$("search-opp").addEventListener("input", (e) => { filterOpp = e.target.value ?? ""; renderOpp(); });
+const searchYouEl = $("search-you");
+if (searchYouEl) searchYouEl.addEventListener("input", (e) => { filterYou = e.target.value ?? ""; renderYou(); });
+const searchOppEl = $("search-opp");
+if (searchOppEl) searchOppEl.addEventListener("input", (e) => { filterOpp = e.target.value ?? ""; renderOpp(); });
 
-$("hand-minus").addEventListener("click", () => { oppHand = clamp(oppHand - 1, 0, totalLeft(deckOpp)); renderOpp(); });
-$("hand-plus").addEventListener("click", () => { oppHand = clamp(oppHand + 1, 0, totalLeft(deckOpp)); renderOpp(); });
+const handMinusEl = $("hand-minus");
+if (handMinusEl) handMinusEl.addEventListener("click", () => { oppHand = clamp(oppHand - 1, 0, totalLeft(deckOpp)); renderOpp(); });
+const handPlusEl = $("hand-plus");
+if (handPlusEl) handPlusEl.addEventListener("click", () => { oppHand = clamp(oppHand + 1, 0, totalLeft(deckOpp)); renderOpp(); });
 
-$("record-win").addEventListener("click", () => recordGame("win"));
-$("record-loss").addEventListener("click", () => recordGame("loss"));
-$("export-data").addEventListener("click", exportData);
+const recordWinEl = $("record-win");
+if (recordWinEl) recordWinEl.addEventListener("click", () => recordGame("win"));
+const recordLossEl = $("record-loss");
+if (recordLossEl) recordLossEl.addEventListener("click", () => recordGame("loss"));
+const exportDataEl = $("export-data");
+if (exportDataEl) exportDataEl.addEventListener("click", exportData);
 
 const openStatsEl = $("open-stats");
 if (openStatsEl) {
   openStatsEl.href = chrome.runtime.getURL("stats.html");
 }
 
-$("reset").addEventListener("click", () => {
-  deckYou = [];
-  deckOpp = [];
-  filterYou = "";
-  filterOpp = "";
-  oppHand = 0;
-  currentBattlefield = null;
-  currentTurnCount = null;
-  yourCardsPlayedThisGame = [];
-  opponentCardsPlayedThisGame = [];
+const resetEl = $("reset");
+if (resetEl) {
+  resetEl.addEventListener("click", () => {
+    deckYou = [];
+    deckOpp = [];
+    filterYou = "";
+    filterOpp = "";
+    oppHand = 0;
+    currentBattlefield = null;
+    currentTurnCount = null;
+    yourCardsPlayedThisGame = [];
+    opponentCardsPlayedThisGame = [];
 
-  $("input-you").value = "";
-  $("input-opp").value = "";
-  $("search-you").value = "";
-  $("search-opp").value = "";
-  $("hand-value").textContent = "0";
-  $("preset-you").value = "";
-  $("preset-opp").value = "";
-  $("new-preset-name-you").value = "";
-  $("new-preset-name-opp").value = "";
-  const oppHero = $("opponent-hero");
-  if (oppHero) oppHero.value = "";
+    const inputYou = $("input-you");
+    if (inputYou) inputYou.value = "";
+    const inputOpp = $("input-opp");
+    if (inputOpp) inputOpp.value = "";
+    const searchYou = $("search-you");
+    if (searchYou) searchYou.value = "";
+    const searchOpp = $("search-opp");
+    if (searchOpp) searchOpp.value = "";
+    const handValue = $("hand-value");
+    if (handValue) handValue.textContent = "0";
+    const presetYou = $("preset-you");
+    if (presetYou) presetYou.value = "";
+    const presetOpp = $("preset-opp");
+    if (presetOpp) presetOpp.value = "";
+    const newPresetYou = $("new-preset-name-you");
+    if (newPresetYou) newPresetYou.value = "";
+    const newPresetOpp = $("new-preset-name-opp");
+    if (newPresetOpp) newPresetOpp.value = "";
+    const oppHero = $("opponent-hero");
+    if (oppHero) oppHero.value = "";
 
-  updateGameMetaDisplay();
-  renderAll();
-});
+    updateGameMetaDisplay();
+    renderAll();
+  });
+}
 
 // Save my name as you type (debounced)
 let myNameTimer = null;
-$("my-name").addEventListener("input", () => {
-  const v = $("my-name").value.toString();
-  myName = v.trim();
+const myNameInput = $("my-name");
+if (myNameInput) {
+  myNameInput.addEventListener("input", () => {
+    const v = myNameInput.value.toString();
+    myName = v.trim();
 
-  if (myNameTimer) clearTimeout(myNameTimer);
-  myNameTimer = setTimeout(async () => {
-    await saveMyName(myName);
-    chrome.runtime.sendMessage({ type: "rb_ping_tabs" });
-  }, 350);
-});
+    if (myNameTimer) clearTimeout(myNameTimer);
+    myNameTimer = setTimeout(async () => {
+      await saveMyName(myName);
+      try {
+        chrome.runtime.sendMessage({ type: "rb_ping_tabs" });
+      } catch (e) { /* receiving end may not exist */ }
+    }, 350);
+  });
+}
 
 // Receive observer events
 chrome.runtime.onMessage.addListener((msg) => {
   if (!msg || typeof msg !== "object") return;
 
   if (msg.type === "rb_log_status") {
-    $("auto-status").textContent = msg.ok ? "Auto log: on" : "Auto log: off";
+    const autoStatusEl = $("auto-status");
+    if (autoStatusEl) autoStatusEl.textContent = msg.ok ? "Auto log: on" : "Auto log: off";
     return;
   }
 
@@ -784,14 +812,17 @@ chrome.runtime.onMessage.addListener((msg) => {
   }
 
   if (msg.type === "rb_log_event") {
-    const { side, delta, cardName } = msg;
+    const { side, delta, cardName, playerName } = msg;
     if (delta === -1 && cardName) {
-      if (side === "you") {
+      const isYou = typeof playerName === "string" && myName
+        ? normName(playerName) === normName(myName)
+        : side === "you";
+      if (isYou) {
         const existing = yourCardsPlayedThisGame.find(c => normName(c.name) === normName(cardName));
         if (existing) existing.count += 1;
         else yourCardsPlayedThisGame.push({ name: cardName, count: 1 });
         updateGameMetaDisplay();
-      } else if (side === "opp") {
+      } else {
         const existing = opponentCardsPlayedThisGame.find(c => normName(c.name) === normName(cardName));
         if (existing) existing.count += 1;
         else opponentCardsPlayedThisGame.push({ name: cardName, count: 1 });
@@ -838,7 +869,9 @@ chrome.runtime.onMessage.addListener((msg) => {
   const myNameEl = $("my-name");
   if (myNameEl) myNameEl.value = myName;
 
-  chrome.runtime.sendMessage({ type: "rb_ping_tabs" });
+  try {
+    chrome.runtime.sendMessage({ type: "rb_ping_tabs" });
+  } catch (e) { /* receiving end may not exist */ }
 
   fillOpponentHeroSelect($("opponent-hero"));
   updateRecordedCount();

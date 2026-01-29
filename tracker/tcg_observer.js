@@ -110,7 +110,7 @@
     const played = tryExtractPlayed(node);
     if (played) {
       const side = normName(played.playerName) === normName(myName) ? "you" : "opp";
-      safeSendMessage({ type: "rb_log_event", side, delta: -1, cardName: played.cardName });
+      safeSendMessage({ type: "rb_log_event", side, delta: -1, cardName: played.cardName, playerName: played.playerName });
       return;
     }
 

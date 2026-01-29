@@ -16,7 +16,7 @@ chrome.runtime.onMessage.addListener((msg) => {
       for (const t of tabs) {
         const url = t.url || "";
         if (url.includes("tcg-arena.fr")) {
-          chrome.tabs.sendMessage(t.id, { type: "rb_ping" });
+          chrome.tabs.sendMessage(t.id, { type: "rb_ping" }).catch(() => {});
         }
       }
     });
