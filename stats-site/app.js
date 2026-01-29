@@ -15,10 +15,11 @@
   const winrateOverTime = $("winrate-over-time");
 
   const OPPONENT_HEROES = [
-    "Irelia", "Fiora", "Ezreal", "Lucian", "Rumble", "Ornn",
+    "Azir","Irelia", "Fiora", "Ezreal", "Lucian", "Rumble", "Ornn",
     "Annie", "Master Yi", "Lux", "Garen", "Ahri", "Darius",
     "Jinx", "Kai'Sa", "Lee Sin", "Miss Fortune", "Sett", "Teemo",
-    "Viktor", "Volibear", "Yasuo"
+    "Viktor", "Volibear", "Yasuo", "Leona", "Draven", "Jax", "Rek'Sai",
+    "Sivir", "Renata Glasc"
   ];
 
   let currentData = null;
