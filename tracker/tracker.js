@@ -648,10 +648,15 @@ async function deleteSelectedPreset(which) {
 }
 
 function updateDeleteButtons() {
-  const py = getPresetById($("preset-you").value);
-  const po = getPresetById($("preset-opp").value);
-  $("delete-preset-you").disabled = !(py && py.isCustom);
-  $("delete-preset-opp").disabled = !(po && po.isCustom);
+  const presetYou = $("preset-you");
+  const presetOpp = $("preset-opp");
+  const delYou = $("delete-preset-you");
+  const delOpp = $("delete-preset-opp");
+  if (!presetYou || !presetOpp || !delYou || !delOpp) return;
+  const py = getPresetById(presetYou.value);
+  const po = getPresetById(presetOpp.value);
+  delYou.disabled = !(py && py.isCustom);
+  delOpp.disabled = !(po && po.isCustom);
 }
 
 function fillOpponentHeroSelect(selectEl) {
@@ -670,27 +675,32 @@ function fillOpponentHeroSelect(selectEl) {
   }
 }
 
-// Event Listener
-$("use-preset-you").addEventListener("click", () => applyPresetTo("you"));
-$("use-preset-opp").addEventListener("click", () => applyPresetTo("opp"));
-
-$("new-preset-you").addEventListener("click", () => createPresetFrom("you"));
-$("new-preset-opp").addEventListener("click", () => createPresetFrom("opp"));
-
-$("delete-preset-you").addEventListener("click", () => deleteSelectedPreset("you"));
-$("delete-preset-opp").addEventListener("click", () => deleteSelectedPreset("opp"));
-
-$("preset-you").addEventListener("change", updateDeleteButtons);
-$("preset-opp").addEventListener("change", updateDeleteButtons);
-
-$("start-you").addEventListener("click", () => {
-  deckYou = parseDeck($("input-you").value);
+// Event Listener (preset/start elements removed from UI – guards so script does not throw)
+const usePresetYou = $("use-preset-you");
+if (usePresetYou) usePresetYou.addEventListener("click", () => applyPresetTo("you"));
+const usePresetOpp = $("use-preset-opp");
+if (usePresetOpp) usePresetOpp.addEventListener("click", () => applyPresetTo("opp"));
+const newPresetYou = $("new-preset-you");
+if (newPresetYou) newPresetYou.addEventListener("click", () => createPresetFrom("you"));
+const newPresetOpp = $("new-preset-opp");
+if (newPresetOpp) newPresetOpp.addEventListener("click", () => createPresetFrom("opp"));
+const delPresetYou = $("delete-preset-you");
+if (delPresetYou) delPresetYou.addEventListener("click", () => deleteSelectedPreset("you"));
+const delPresetOpp = $("delete-preset-opp");
+if (delPresetOpp) delPresetOpp.addEventListener("click", () => deleteSelectedPreset("opp"));
+const presetYouEl = $("preset-you");
+if (presetYouEl) presetYouEl.addEventListener("change", updateDeleteButtons);
+const presetOppEl = $("preset-opp");
+if (presetOppEl) presetOppEl.addEventListener("change", updateDeleteButtons);
+const startYouEl = $("start-you");
+if (startYouEl) startYouEl.addEventListener("click", () => {
+  deckYou = parseDeck(($("input-you") && $("input-you").value) || "");
   if (!deckYou.length) { alert("Could not read your decklist. Use lines like: 3x Card Name"); return; }
   renderAll();
 });
-
-$("start-opp").addEventListener("click", () => {
-  deckOpp = parseDeck($("input-opp").value);
+const startOppEl = $("start-opp");
+if (startOppEl) startOppEl.addEventListener("click", () => {
+  deckOpp = parseDeck(($("input-opp") && $("input-opp").value) || "");
   if (!deckOpp.length) { alert("Could not read opponent decklist. Use lines like: 2x Card Name"); return; }
   oppHand = clamp(oppHand, 0, totalLeft(deckOpp));
   renderAll();
@@ -814,14 +824,19 @@ chrome.runtime.onMessage.addListener((msg) => {
 
 // ---------- Init ----------
 (async () => {
-  customPresets = await loadCustomPresets();
-  rebuildAllPresets();
-  fillPresetSelect($("preset-you"));
-  fillPresetSelect($("preset-opp"));
-  updateDeleteButtons();
+  try {
+    customPresets = await loadCustomPresets();
+    rebuildAllPresets();
+    const presetYouSel = $("preset-you");
+    if (presetYouSel) fillPresetSelect(presetYouSel);
+    const presetOppSel = $("preset-opp");
+    if (presetOppSel) fillPresetSelect(presetOppSel);
+    updateDeleteButtons();
+  } catch (e) { /* preset UI removed */ }
 
   myName = await loadMyName();
-  $("my-name").value = myName;
+  const myNameEl = $("my-name");
+  if (myNameEl) myNameEl.value = myName;
 
   chrome.runtime.sendMessage({ type: "rb_ping_tabs" });
 
@@ -831,17 +846,22 @@ chrome.runtime.onMessage.addListener((msg) => {
 
   const supabaseUrlEl = $("supabase-url");
   const supabaseKeyEl = $("supabase-key");
-  loadSupabaseConfig().then(({ url, key }) => {
-    if (supabaseUrlEl) supabaseUrlEl.value = url;
-    if (supabaseKeyEl) supabaseKeyEl.value = key;
-  });
-  $("supabase-save").addEventListener("click", async () => {
-    const url = (supabaseUrlEl && supabaseUrlEl.value || "").trim();
-    const key = (supabaseKeyEl && supabaseKeyEl.value || "").trim();
-    await saveSupabaseConfig(url, key);
-    const st = $("supabase-status");
-    if (st) { st.textContent = url && key ? "Saved" : ""; st.classList.remove("supabase-err"); }
-  });
+  if (supabaseUrlEl || supabaseKeyEl) {
+    loadSupabaseConfig().then(({ url, key }) => {
+      if (supabaseUrlEl) supabaseUrlEl.value = url;
+      if (supabaseKeyEl) supabaseKeyEl.value = key;
+    });
+  }
+  const supabaseSaveBtn = $("supabase-save");
+  if (supabaseSaveBtn) {
+    supabaseSaveBtn.addEventListener("click", async () => {
+      const url = (supabaseUrlEl && supabaseUrlEl.value || "").trim();
+      const key = (supabaseKeyEl && supabaseKeyEl.value || "").trim();
+      await saveSupabaseConfig(url, key);
+      const st = $("supabase-status");
+      if (st) { st.textContent = url && key ? "Saved" : ""; st.classList.remove("supabase-err"); }
+    });
+  }
 
   renderAll();
 })();
