@@ -20,18 +20,13 @@ On https://tcg-arena.fr/play the extension will read chat lines and update the t
 Record the result
 After the game, click Record win or Record loss. Optionally set Opponent hero and use Export data when you want to move data to the stats site.
 
-### SUPABASE INSERT (Record win/loss → PostgreSQL)
-The tracker runs in the **browser** (Chrome extension). It cannot read Netlify env or a `.env` file. Two options:
-1. Open the **tracker** (extension window).
-2. Scroll to **Supabase – set once so Record win/loss INSERTs to your DB**.
-3. Enter **Project URL** (e.g. `https://xxxx.supabase.co`) and **Anon key (Legacy)** from the Supabase dashboard.
-4. Click **Save**.
-5. From then on, every Record win/loss POSTs that game to Supabase (status shows “Synced” or “Sync failed”).
-This uses the extension’s stored URL/key only. Netlify env vars are for server-side code, not for this flow. If you get 403, check Supabase → Table Editor → RLS: allow INSERT for anon on `games` and `game_cards` (or disable RLS for testing).
-
 ### HOW TO USE THE SITE
 
 Go to: 
 https://riftblazing.netlify.app/ (knowers know)
-Import button top right at header
-Drag the exported JSON there → load data → view stats
+
+**Data source (Supabase, primary)**  
+Open **Import** in the header. Enter your **Supabase URL** and **Anon key** (same as in the Tracker), then **Save**. The stats page loads from Supabase on open and when you click **Refresh**.
+
+**Import JSON (optional)**  
+You can still drag or paste exported JSON on the Import page for convenience; data is stored in the browser and used if Supabase is not configured or fails.

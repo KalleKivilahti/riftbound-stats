@@ -24,29 +24,11 @@
         <div class="panel-head">
           <h2>Your deck</h2>
           <div class="stats" id="stats-you"></div>
-          <p class="stats-hint" id="stats-you-hint">Paste decklist for “left in deck” and draw %. Or leave empty and use “from log” only.</p>
         </div>
+
+        <textarea id="input-you" class="deck-input hidden" aria-hidden="true"></textarea>
 
         <div class="panel-actions">
-          <select id="preset-you" class="control">
-            <option value="">Presets (your deck)</option>
-          </select>
-          <button id="use-preset-you">Use preset</button>
-          <button id="delete-preset-you">Delete preset</button>
-        </div>
-
-        <div class="deck-paste">
-          <label for="input-you" class="deck-label">Your decklist</label>
-          <textarea id="input-you" class="deck-input" placeholder="3 Stacked Deck&#10;2 Rebuke&#10;1 Falling Star"></textarea>
-        </div>
-
-        <div class="panel-actions">
-          <input id="new-preset-name-you" class="control" placeholder="New preset name..." />
-          <button id="new-preset-you">New preset</button>
-        </div>
-
-        <div class="panel-actions">
-          <button id="start-you">Load your list</button>
           <button id="undo-you">Undo</button>
           <input id="search-you" class="control" placeholder="Search card..." />
         </div>
@@ -62,13 +44,6 @@
           <button id="export-data">Export data</button>
           <a id="open-stats" href="#" target="_blank" rel="noopener">View stats</a>
           <span id="supabase-status" class="badge supabase-status" title="Supabase sync"></span>
-        </div>
-        <div class="supabase-config">
-          <label class="deck-label">Supabase – set once so Record win/loss INSERTs to your DB</label>
-          <input id="supabase-url" class="control" placeholder="Project URL: https://xxx.supabase.co" />
-          <input id="supabase-key" class="control" type="password" placeholder="Anon key (Legacy), then Save" autocomplete="off" />
-          <button id="supabase-save" class="btn">Save</button>
-          <p class="stats-hint">Stored in extension only (Netlify env is for server-side). After Save, each Record win/loss POSTs to Supabase.</p>
         </div>
 
         <div class="table-wrap" id="your-deck-wrap">
@@ -106,12 +81,6 @@
         </div>
 
         <div class="panel-actions">
-          <select id="preset-opp" class="control">
-            <option value="">Presets (opponent)</option>
-          </select>
-          <button id="use-preset-opp">Use preset</button>
-          <button id="delete-preset-opp">Delete preset</button>
-
           <div class="handbox">
             <span class="handlabel">Opp hand</span>
             <button class="btn small" id="hand-minus">-</button>
@@ -120,18 +89,9 @@
           </div>
         </div>
 
-        <div class="deck-paste">
-          <label for="input-opp" class="deck-label">Opponent decklist</label>
-          <textarea id="input-opp" class="deck-input" placeholder="Paste opponent list or a guessed list (same format)"></textarea>
-        </div>
+        <textarea id="input-opp" class="deck-input hidden" aria-hidden="true"></textarea>
 
         <div class="panel-actions">
-          <input id="new-preset-name-opp" class="control" placeholder="New preset name..." />
-          <button id="new-preset-opp">New preset</button>
-        </div>
-
-        <div class="panel-actions">
-          <button id="start-opp">Load opponent list</button>
           <button id="undo-opp">Undo</button>
           <input id="search-opp" class="control" placeholder="Search card..." />
         </div>
