@@ -126,7 +126,17 @@
     }
   }
 
+  let currentObserver = null;
+  let currentContainer = null;
+
   function startObserver(container) {
+    if (!container) return;
+    if (currentObserver) {
+      currentObserver.disconnect();
+      currentObserver = null;
+    }
+    currentContainer = container;
+
     console.log("[Riftbound] Observer starting on:", container?.className || container?.id || "unknown");
 
     const observer = new MutationObserver((mutations) => {
@@ -150,9 +160,27 @@
       subtree: true,
       characterData: true
     });
+    currentObserver = observer;
 
     console.log("[Riftbound] Initial scan...");
-    container.querySelectorAll("div, p, span, li, article").forEach(handlePossibleLine);
+    try {
+      container.querySelectorAll("div, p, span, li, article").forEach(handlePossibleLine);
+    } catch (e) {}
+  }
+
+  // Check for the container if its disconnected
+  function ensureObserving() {
+    if (contextInvalidated) return;
+    const inDoc = currentContainer && document.body.contains(currentContainer);
+    if (!inDoc) {
+      currentObserver = null;
+      currentContainer = null;
+      const container = findChatContainer();
+      if (container) {
+        console.log("[Riftbound] Chat container was replaced – re-attaching observer.");
+        startObserver(container);
+      }
+    }
   }
 
   function findChatContainer() {
@@ -194,8 +222,11 @@
         if (statusIntervalId != null) clearInterval(statusIntervalId);
         return;
       }
+      ensureObserving();
       safeSendMessage({ type: "rb_log_status", ok: true });
     }, 5000);
+
+    setInterval(ensureObserving, 60000);
   })();
 
   chrome.runtime.onMessage.addListener(msg => {

@@ -3,6 +3,8 @@ for fun site to farm best ofs :D
 general improvements, abysmal CSS
 battlefields not working yet
 1st or 2nd winrate
+bug if game is too long
+turn x card is drawn/played
 
 ### HOW TO USE THE TRACKER
 Reload the tcg-arena tab
