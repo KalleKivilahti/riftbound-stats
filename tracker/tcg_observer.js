@@ -41,6 +41,36 @@
     return String(s || "").toLowerCase().trim();
   }
 
+  function cleanPlayerNameForComparison(name) {
+    if (!name) return "";
+    const trimmed = name.trim();
+    if (!trimmed) return "";
+
+    const parenMatch = trimmed.match(/\(([^)]+)\)\s*$/);
+    if (parenMatch) {
+      const inner = (parenMatch[1] || "").trim();
+      const prefix = trimmed.slice(0, parenMatch.index).trim();
+      if (inner && inner.toLowerCase() !== "you") {
+        return inner;
+      }
+      if (prefix) {
+        return prefix;
+      }
+    }
+
+    return trimmed;
+  }
+
+  function isPlayerYou(playerName) {
+    const cleaned = cleanPlayerNameForComparison(playerName);
+    if (!cleaned) return false;
+    const normalizedPlayer = normName(cleaned);
+    if (!normalizedPlayer) return false;
+    if (normalizedPlayer === "you") return true;
+    const normalizedMyName = normName(myName);
+    return Boolean(normalizedMyName && normalizedPlayer === normalizedMyName);
+  }
+
   function tryExtractPlayed(element) {
     if (!element?.textContent) return null;
     let text = element.textContent.trim();
@@ -109,7 +139,7 @@
 
     const played = tryExtractPlayed(node);
     if (played) {
-      const side = normName(played.playerName) === normName(myName) ? "you" : "opp";
+      const side = isPlayerYou(played.playerName) ? "you" : "opp";
       safeSendMessage({ type: "rb_log_event", side, delta: -1, cardName: played.cardName, playerName: played.playerName });
       return;
     }

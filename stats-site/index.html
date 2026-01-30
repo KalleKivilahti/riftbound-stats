@@ -39,26 +39,31 @@
       </div>
 
       <div class="filters-section">
-        <h3>Filters</h3>
-        <div class="filters-row">
-          <label>Include players (comma, empty = all)</label>
-          <input type="text" id="filter-include-players" class="filter-input" placeholder="e.g. tog" />
+        <div class="filters-head">
+          <h3>Filters</h3>
+          <p class="filters-description">Focus the dashboard on specific players, opponents, or battlefields.</p>
         </div>
-        <div class="filters-row">
-          <label>Exclude players (comma)</label>
-          <input type="text" id="filter-exclude-players" class="filter-input" placeholder="e.g. tog" />
-        </div>
-        <div class="filters-row">
-          <label>Opponent hero</label>
-          <select id="filter-opponent-hero" class="filter-select">
-            <option value="">Any</option>
-          </select>
-        </div>
-        <div class="filters-row">
-          <label>Battlefield</label>
-          <select id="filter-battlefield" class="filter-select">
-            <option value="">Any</option>
-          </select>
+        <div class="filters-grid">
+          <div class="filter-field">
+            <label class="filter-label" for="filter-include-players">Include players (comma, empty = all)</label>
+            <input type="text" id="filter-include-players" class="filter-input" placeholder="e.g. tog" />
+          </div>
+          <div class="filter-field">
+            <label class="filter-label" for="filter-exclude-players">Exclude players (comma)</label>
+            <input type="text" id="filter-exclude-players" class="filter-input" placeholder="e.g. tog" />
+          </div>
+          <div class="filter-field">
+            <label class="filter-label" for="filter-opponent-hero">Opponent hero</label>
+            <select id="filter-opponent-hero" class="filter-select">
+              <option value="">Any</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label class="filter-label" for="filter-battlefield">Battlefield</label>
+            <select id="filter-battlefield" class="filter-select">
+              <option value="">Any</option>
+            </select>
+          </div>
         </div>
       </div>
 
