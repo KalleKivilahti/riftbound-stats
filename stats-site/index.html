@@ -41,19 +41,18 @@
       <div class="filters-section">
         <div class="filters-head">
           <h3>Filters</h3>
-          <p class="filters-description">Focus the dashboard on specific players, opponents, or battlefields.</p>
         </div>
         <div class="filters-grid">
           <div class="filter-field">
-            <label class="filter-label" for="filter-include-players">Include players (comma, empty = all)</label>
+            <label class="filter-label" for="filter-include-players">Include</label>
             <input type="text" id="filter-include-players" class="filter-input" placeholder="e.g. tog" />
           </div>
           <div class="filter-field">
-            <label class="filter-label" for="filter-exclude-players">Exclude players (comma)</label>
+            <label class="filter-label" for="filter-exclude-players">Exclude</label>
             <input type="text" id="filter-exclude-players" class="filter-input" placeholder="e.g. tog" />
           </div>
           <div class="filter-field">
-            <label class="filter-label" for="filter-opponent-hero">Opponent hero</label>
+            <label class="filter-label" for="filter-opponent-hero">Opponents Legend</label>
             <select id="filter-opponent-hero" class="filter-select">
               <option value="">Any</option>
             </select>
@@ -68,8 +67,7 @@
       </div>
 
       <div class="winrate-over-time hidden" id="winrate-over-time">
-        <h3>Winrate by day</h3>
-        <div class="chart-legend">Bar = Day</div>
+        <h3>Winrate</h3>
         <div class="day-bars" id="day-bars"></div>
       </div>
 
