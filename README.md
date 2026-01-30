@@ -6,27 +6,31 @@ battlefields not working yet
 bug if game is too long
 turn x card is drawn/played
 
+### HOW TO INSTALL TRACKER EXTENSION
+The github link
+tracker folder
+Download all the files to any folder
+Go to browser extensions
+Load unpacked choose the folder that has all and only the files from tracker
+Youre done with installing
+Open the tracker
+
 ### HOW TO USE THE TRACKER
 Reload the tcg-arena tab
 After you load or reload the extension, refresh the tcg-arena play page (F5) so the content script is injected again with a valid context.
 Recommended order: reload extension → then reload tcg-arena tab.
 Open the tracker
 Click the extension icon to open the tracker window.
-Set “My name”. Type your in-game name exactly as it appears in chat.
-Optional: paste your decklist
-You can paste your deck for “cards left” and draw %. If you don’t, the tracker still records “your cards played” from the chat log.
+Set TCGA Nick. Type your in-game name exactly as it appears in chat.
 Play on tcg-arena
 On https://tcg-arena.fr/play the extension will read chat lines and update the tracker.
 Record the result
-After the game, click Record win or Record loss. Optionally set Opponent hero and use Export data when you want to move data to the stats site.
+After the game, click Record win or Record loss. Set Opponent legend. The record will automatically push the data to database where the site pulls it from
 
 ### HOW TO USE THE SITE
 
 Go to: 
 https://riftblazing.netlify.app/ (knowers know)
-
-**Data source (Supabase, primary)**  
-Open **Import** in the header. Enter your **Supabase URL** and **Anon key** (same as in the Tracker), then **Save**. The stats page loads from Supabase on open and when you click **Refresh**.
 
 **Import JSON (optional)**  
 You can still drag or paste exported JSON on the Import page for convenience; data is stored in the browser and used if Supabase is not configured or fails.
