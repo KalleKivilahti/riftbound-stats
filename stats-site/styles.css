@@ -243,6 +243,11 @@ body {
   appearance: none;
 }
 
+.filter-select option {
+  background: rgba(12, 12, 18, 0.95);
+  color: var(--text);
+}
+
 .winrate-over-time h3,
 .turn-stats h3 {
   margin: 0 0 0.5rem;
