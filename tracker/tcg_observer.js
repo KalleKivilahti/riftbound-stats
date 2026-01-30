@@ -71,27 +71,20 @@
     return Boolean(normalizedMyName && normalizedPlayer === normalizedMyName);
   }
 
+  const PLAYED_KEYWORD = "played";
+
   function tryExtractPlayed(element) {
     if (!element?.textContent) return null;
-    let text = element.textContent.trim();
-    if (!text.includes("played")) return null;
+    const text = element.textContent.trim();
+    const lower = text.toLowerCase();
+    const idx = lower.indexOf(PLAYED_KEYWORD);
+    if (idx < 0) return null;
 
-    let player = "";
-    let rest = "";
-    if (text.includes(" played ")) {
-      const parts = text.split(" played ");
-      player = parts[0].trim();
-      rest = parts[1].trim();
-    } else {
-      const idx = text.indexOf("played");
-      if (idx > 0) {
-        player = text.substring(0, idx).trim();
-        rest = text.substring(idx + "played".length).trim();
-      }
-    }
+    const player = text.substring(0, idx).trim();
+    const rest = text.substring(idx + PLAYED_KEYWORD.length).trim();
     if (!player || !rest) return null;
 
-    let card = rest.replace(/ from hand|[\.\!]$/g, "").trim();
+    let card = rest.replace(/ from hand|[\.\!]$/gi, "").trim();
     const cardElem = element.querySelector('[class*="card"], .name, strong, b, span:not([class*="time"])');
     if (cardElem) card = cardElem.textContent.trim();
     if (!card) return null;
@@ -140,6 +133,7 @@
     const played = tryExtractPlayed(node);
     if (played) {
       const side = isPlayerYou(played.playerName) ? "you" : "opp";
+      console.log(`[Riftbound] Detected play event → player="${played.playerName}" card="${played.cardName}" side=${side}`);
       safeSendMessage({ type: "rb_log_event", side, delta: -1, cardName: played.cardName, playerName: played.playerName });
       return;
     }
