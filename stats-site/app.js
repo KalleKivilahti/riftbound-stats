@@ -14,7 +14,7 @@
   const dayBarsEl = $("day-bars");
   const winrateOverTime = $("winrate-over-time");
 
-const OPPONENT_HEROES = [
+const LEGENDS = [
   "Azir","Irelia", "Fiora", "Ezreal", "Lucian", "Rumble", "Ornn",
   "Annie", "Master Yi", "Lux", "Garen", "Ahri", "Darius",
   "Jinx", "Kai'Sa", "Lee Sin", "Miss Fortune", "Sett", "Teemo",
@@ -31,6 +31,7 @@ const OPPONENT_HEROES = [
   let filterPlayerExclude = "";
   let filterOpponentHero = "";
   let filterBattlefield = "";
+let filterPlayerLegend = "";
   let oppCardFilterQuery = "";
 
   function setError(msg) {
@@ -68,6 +69,7 @@ const OPPONENT_HEROES = [
         result: g.result || "",
         deckName: g.deck_name || null,
         battlefield: g.battlefield || null,
+        playerLegend: g.legendary || null,
         opponentHero: g.opponent_legend || null,
         turnCount: g.turn_count != null ? g.turn_count : null,
         date: g.played_at ? new Date(g.played_at).toISOString() : "",
@@ -118,6 +120,7 @@ const OPPONENT_HEROES = [
     const excludeList = filterPlayerExclude.split(",").map((s) => normPlayer(s)).filter(Boolean);
     if (includeList.length) list = list.filter((g) => includeList.includes(normPlayer(g.playerName)));
     if (excludeList.length) list = list.filter((g) => !excludeList.includes(normPlayer(g.playerName)));
+    if (filterPlayerLegend) list = list.filter((g) => (g.playerLegend || "") === filterPlayerLegend);
     if (filterOpponentHero) list = list.filter((g) => (g.opponentHero || "") === filterOpponentHero);
     if (filterBattlefield) list = list.filter((g) => (g.battlefield || "") === filterBattlefield);
     return list;
@@ -294,18 +297,23 @@ const OPPONENT_HEROES = [
     });
   }
 
+  function populateLegendSelect(selectEl) {
+    if (!selectEl) return;
+    selectEl.innerHTML = "<option value=\"\">Any</option>";
+    LEGENDS.forEach((h) => {
+      const opt = document.createElement("option");
+      opt.value = h;
+      opt.textContent = h;
+      selectEl.appendChild(opt);
+    });
+  }
+
   function fillFilterSelects(games) {
     const heroSelect = $("filter-opponent-hero");
+    const playerLegendSelect = $("filter-player-legend");
     const bfSelect = $("filter-battlefield");
-    if (heroSelect) {
-      heroSelect.innerHTML = "<option value=\"\">Any</option>";
-      OPPONENT_HEROES.forEach((h) => {
-        const opt = document.createElement("option");
-        opt.value = h;
-        opt.textContent = h;
-        heroSelect.appendChild(opt);
-      });
-    }
+    populateLegendSelect(heroSelect);
+    populateLegendSelect(playerLegendSelect);
     if (bfSelect) {
       const battlefields = new Set();
       (games || []).forEach((g) => { if (g.battlefield) battlefields.add(g.battlefield); });
@@ -473,10 +481,12 @@ const OPPONENT_HEROES = [
   const filterIncludeEl = $("filter-include-players");
   const filterExcludeEl = $("filter-exclude-players");
   const filterHeroEl = $("filter-opponent-hero");
+  const filterPlayerLegendEl = $("filter-player-legend");
   const filterBfEl = $("filter-battlefield");
   function applyFiltersAndRender() {
     if (filterIncludeEl) filterPlayerInclude = (filterIncludeEl.value || "").trim();
     if (filterExcludeEl) filterPlayerExclude = (filterExcludeEl.value || "").trim();
+    if (filterPlayerLegendEl) filterPlayerLegend = (filterPlayerLegendEl.value || "").trim();
     if (filterHeroEl) filterOpponentHero = (filterHeroEl.value || "").trim();
     if (filterBfEl) filterBattlefield = (filterBfEl.value || "").trim();
     if (currentData && currentStats) {
@@ -487,6 +497,7 @@ const OPPONENT_HEROES = [
   if (filterIncludeEl) filterIncludeEl.addEventListener("input", applyFiltersAndRender);
   if (filterExcludeEl) filterExcludeEl.addEventListener("input", applyFiltersAndRender);
   if (filterHeroEl) filterHeroEl.addEventListener("change", applyFiltersAndRender);
+  if (filterPlayerLegendEl) filterPlayerLegendEl.addEventListener("change", applyFiltersAndRender);
   if (filterBfEl) filterBfEl.addEventListener("change", applyFiltersAndRender);
 
   const oppCardSearch = $("opp-card-search");

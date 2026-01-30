@@ -28,6 +28,7 @@ const DEFAULT_PRESETS = [
 // ---------- Storage ----------
 const STORAGE_KEY_PRESETS = "customPresets";
 const STORAGE_KEY_MYNAME = "rb_myName";
+const STORAGE_KEY_MYLEGEND = "rb_myLegend";
 const STORAGE_KEY_GAMES = "rb_games";
 const STORAGE_KEY_SUPABASE_URL = "rb_supabaseUrl";
 const STORAGE_KEY_SUPABASE_KEY = "rb_supabaseKey";
@@ -55,8 +56,17 @@ async function loadMyName() {
   return (data[STORAGE_KEY_MYNAME] ?? "").toString().trim();
 }
 
+async function loadMyLegend() {
+  const data = await chrome.storage.local.get([STORAGE_KEY_MYLEGEND]);
+  return (data[STORAGE_KEY_MYLEGEND] ?? "").toString().trim();
+}
+
 async function saveMyName(name) {
   await chrome.storage.local.set({ [STORAGE_KEY_MYNAME]: name });
+}
+
+async function saveMyLegend(legend) {
+  await chrome.storage.local.set({ [STORAGE_KEY_MYLEGEND]: legend });
 }
 
 async function loadGames() {
@@ -66,7 +76,7 @@ async function loadGames() {
 }
 
 // Manual heroes for now
-const OPPONENT_HEROES = [
+const LEGENDS = [
   "Azir","Irelia", "Fiora", "Ezreal", "Lucian", "Rumble", "Ornn",
   "Annie", "Master Yi", "Lux", "Garen", "Ahri", "Darius",
   "Jinx", "Kai'Sa", "Lee Sin", "Miss Fortune", "Sett", "Teemo",
@@ -286,6 +296,8 @@ async function recordGame(result) {
   const cardsPlayed = getCardsPlayedThisGame();
   const opponentCardsPlayed = getOpponentCardsPlayedThisGame();
   const opponentHeroEl = $("opponent-hero");
+  const playerLegendEl = $("player-legend");
+  const selectedLegend = playerLegendEl ? (playerLegendEl.value || "").trim() : "";
   const presetYouEl = $("preset-you");
   const gamePayload = {
     date: new Date().toISOString(),
@@ -293,6 +305,7 @@ async function recordGame(result) {
     cardsPlayed,
     deckName: (presetYouEl && getPresetById(presetYouEl.value)?.name) ?? null,
     playerName: myName || null,
+    playerLegend: selectedLegend || null,
     opponentCardsPlayed,
     battlefield: currentBattlefield || null,
     opponentHero: opponentHeroEl && opponentHeroEl.value ? opponentHeroEl.value : null,
@@ -328,7 +341,7 @@ async function submitGameToSupabase(gamePayload) {
     result: gamePayload.result,
     deck_name: gamePayload.deckName || null,
     battlefield: gamePayload.battlefield || null,
-    legendary: null,
+    legendary: gamePayload.playerLegend || null,
     opponent_legend: gamePayload.opponentHero || null,
     turn_count: gamePayload.turnCount ?? null,
     played_at: playedAt
@@ -416,6 +429,7 @@ let filterYou = "";
 let filterOpp = "";
 let oppHand = 0;
 let myName = "";
+let myLegend = "";
 let currentBattlefield = null;
 let currentTurnCount = null;
 let yourCardsPlayedThisGame = [];
@@ -663,18 +677,17 @@ function updateDeleteButtons() {
   delOpp.disabled = !(po && po.isCustom);
 }
 
-function fillOpponentHeroSelect(selectEl) {
+function fillLegendSelect(selectEl, placeholder) {
   if (!selectEl) return;
-  const first = selectEl.querySelector("option");
   selectEl.innerHTML = "";
   const empty = document.createElement("option");
   empty.value = "";
-  empty.textContent = "Opponents legend";
+  empty.textContent = placeholder || "Legend";
   selectEl.appendChild(empty);
-  for (const h of OPPONENT_HEROES) {
+  for (const legend of LEGENDS) {
     const opt = document.createElement("option");
-    opt.value = h;
-    opt.textContent = h;
+    opt.value = legend;
+    opt.textContent = legend;
     selectEl.appendChild(opt);
   }
 }
@@ -789,6 +802,14 @@ if (myNameInput) {
   });
 }
 
+const playerLegendInput = $("player-legend");
+if (playerLegendInput) {
+  playerLegendInput.addEventListener("change", async () => {
+    myLegend = (playerLegendInput.value || "").trim();
+    await saveMyLegend(myLegend);
+  });
+}
+
 // Receive observer events
 chrome.runtime.onMessage.addListener((msg) => {
   if (!msg || typeof msg !== "object") return;
@@ -870,11 +891,16 @@ chrome.runtime.onMessage.addListener((msg) => {
   const myNameEl = $("my-name");
   if (myNameEl) myNameEl.value = myName;
 
+  myLegend = await loadMyLegend();
+  const myLegendEl = $("player-legend");
+  if (myLegendEl) myLegendEl.value = myLegend;
+
   try {
     chrome.runtime.sendMessage({ type: "rb_ping_tabs" });
   } catch (e) { /* receiving end may not exist */ }
 
-  fillOpponentHeroSelect($("opponent-hero"));
+  fillLegendSelect($("opponent-hero"), "Opponents legend");
+  fillLegendSelect($("player-legend"), "Your legend");
   updateRecordedCount();
   updateGameMetaDisplay();
 
