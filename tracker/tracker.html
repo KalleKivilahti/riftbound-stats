@@ -92,41 +92,58 @@
             <tbody id="list-you-from-log"></tbody>
           </table>
         </div>
-      </section>
 
-      <!-- OPP -->
-      <section class="panel">
-        <div class="panel-head">
-          <h2>Opponents cards</h2>
-          <div class="stats" id="stats-opp"></div>
-        </div>
-
-        <div class="panel-actions">
-          <input id="search-opp" class="control" placeholder="Search card..." />
-        </div>
-
-        <div class="table-wrap">
+        <div class="table-wrap your-cards-from-log hidden" id="recorded-from-chat-wrap">
+          <div class="panel-head">
+            <h3 class="from-log-heading">Recorded from chat (debug)</h3>
+            <div class="stats" id="recorded-debug-status"></div>
+          </div>
+          <details style="margin: 8px 0 12px;">
+            <summary>Show raw map entries</summary>
+            <pre id="recorded-debug-map" style="white-space: pre-wrap; margin-top: 8px;"></pre>
+          </details>
           <table>
             <thead>
               <tr>
-                <th>Card</th>
-                <th class="num">Played</th>
-                <th class="num">1x+ %</th>
-                <th class="num">2x+ %</th>
-                <th class="num">3x+ %</th>
-                <th class="num">-</th>
-                <th class="num">+</th>
+                <th>Your card</th>
+                <th class="num">Count</th>
               </tr>
             </thead>
-            <tbody id="list-opp"></tbody>
+            <tbody id="recorded-you-body"></tbody>
+          </table>
+          <table style="margin-top: 12px;">
+            <thead>
+              <tr>
+                <th>Opponent card</th>
+                <th class="num">Count</th>
+              </tr>
+            </thead>
+            <tbody id="recorded-opp-body"></tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap your-cards-from-log hidden" id="recorded-from-chat-wrap">
+          <h3 class="from-log-heading">Recorded from chat (debug)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Your card</th>
+                <th class="num">Count</th>
+              </tr>
+            </thead>
+            <tbody id="recorded-you-body"></tbody>
+          </table>
+          <table style="margin-top: 12px;">
+            <thead>
+              <tr>
+                <th>Opponent card</th>
+                <th class="num">Count</th>
+              </tr>
+            </thead>
+            <tbody id="recorded-opp-body"></tbody>
           </table>
         </div>
       </section>
-    </div>
-
-    <div class="footer">
-      Auto log tracks "played" and "revealed" from tcg-arena chat. If Auto log stays off or you see "Extension context invalidated", <strong>reload the tcg-arena tab (F5)</strong> after updating the extension.
-    </div>
   </div>
 
   <script src="tracker.js"></script>

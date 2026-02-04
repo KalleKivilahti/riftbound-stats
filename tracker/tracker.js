@@ -292,7 +292,168 @@ function getOpponentCardsPlayedThisGame() {
   return opponentCardsPlayedThisGame.slice();
 }
 
+function countBySignature(source) {
+  const map = new Map();
+  for (const entry of source || []) {
+    const name = (entry.cardName || "").trim();
+    const sender = (entry.playerName || "").trim();
+    const text = (entry.text || "").trim().toLowerCase();
+    if (!name || !sender || !text || !entry.side) continue;
+    const key = `${sender}|${entry.side}|${name}|${text}`;
+    map.set(key, (map.get(key) || 0) + 1);
+  }
+  return map;
+}
+
+function mapToLines(map, label) {
+  const lines = [];
+  lines.push(`[${label}]`);
+  const entries = Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  for (const [key, count] of entries) {
+    lines.push(`${count}x ${key}`);
+  }
+  if (entries.length === 0) lines.push("(empty)");
+  lines.push("");
+  return lines;
+}
+
+function mergePlayCounts(scanPlays, bufferPlays) {
+  const countMap = new Map();
+  const entryMap = new Map();
+
+  function addCounts(source, targetMap) {
+    for (const entry of source || []) {
+      const name = (entry.cardName || "").trim();
+      const sender = (entry.playerName || "").trim();
+      const text = (entry.text || "").trim().toLowerCase();
+      const side = entry.side || "";
+      if (!name || !sender || !text || !side) continue;
+      const key = `${sender}|${name}|${text}`;
+      targetMap.set(key, (targetMap.get(key) || 0) + 1);
+      if (!entryMap.has(key)) entryMap.set(key, { side, cardName: name });
+    }
+  }
+
+  const scanCounts = new Map();
+  const bufferCounts = new Map();
+  addCounts(scanPlays, scanCounts);
+  addCounts(bufferPlays, bufferCounts);
+
+  const keys = new Set([...scanCounts.keys(), ...bufferCounts.keys()]);
+  for (const key of keys) {
+    const useScan = scanCounts.has(key);
+    const count = useScan ? scanCounts.get(key) : bufferCounts.get(key);
+    if (!count) continue;
+    const entry = entryMap.get(key);
+    if (!entry) continue;
+    const aggKey = `${entry.side}|${entry.cardName}`;
+    countMap.set(aggKey, (countMap.get(aggKey) || 0) + count);
+  }
+
+  const bySide = { you: [], opp: [] };
+  for (const [key, count] of countMap.entries()) {
+    const [side, cardName] = key.split("|");
+    if (side === "you" || side === "opp") {
+      bySide[side].push({ name: cardName, count });
+    }
+  }
+  return {
+    bySide,
+    debug: {
+      scanMap: scanCounts,
+      bufferMap: bufferCounts
+    }
+  };
+}
+
+function captureChatPlays() {
+  return new Promise((resolve) => {
+    const patterns = ["*://tcg-arena.fr/play*", "*://www.tcg-arena.fr/play*"];
+    chrome.tabs.query({ url: patterns }, (tabs) => {
+      if (!tabs || !tabs.length) {
+        resolve({ plays: [], buffer: [], error: "no_tcga_tabs" });
+        return;
+      }
+      let responded = false;
+      const timer = setTimeout(() => {
+        if (!responded) resolve({ plays: [], buffer: [], error: "timeout" });
+      }, 2000);
+
+      const tryTab = (tab) => {
+        chrome.tabs.sendMessage(tab.id, { type: "rb_scan_history" }, (res) => {
+          if (responded) return;
+          if (chrome.runtime.lastError) return;
+          responded = true;
+          clearTimeout(timer);
+          resolve({
+            plays: Array.isArray(res?.plays) ? res.plays : [],
+            buffer: Array.isArray(res?.buffer) ? res.buffer : [],
+            error: null
+          });
+        });
+      };
+
+      tabs.forEach(tryTab);
+    });
+  });
+}
+
+function renderRecordedDebug(youList, oppList, meta, maps) {
+  const wrap = $("recorded-from-chat-wrap");
+  const youBody = $("recorded-you-body");
+  const oppBody = $("recorded-opp-body");
+  const statusEl = $("recorded-debug-status");
+  const mapEl = $("recorded-debug-map");
+  if (!wrap || !youBody || !oppBody) return;
+
+  wrap.classList.remove("hidden");
+  if (statusEl) {
+    const scanCount = meta?.scanCount ?? 0;
+    const bufferCount = meta?.bufferCount ?? 0;
+    const err = meta?.error;
+    statusEl.textContent = `scan: ${scanCount} · buffer: ${bufferCount}` + (err ? ` · error: ${err}` : "");
+  }
+  youBody.innerHTML = "";
+  oppBody.innerHTML = "";
+  if (mapEl) {
+    const scanMap = maps?.scanMap || new Map();
+    const bufferMap = maps?.bufferMap || new Map();
+    mapEl.textContent = [
+      ...mapToLines(scanMap, "scan"),
+      ...mapToLines(bufferMap, "buffer")
+    ].join("\n");
+  }
+
+  const youSorted = (youList || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+  const oppSorted = (oppList || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+
+  for (const c of youSorted) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td class=\"cardname\">" + escapeHtml(c.name) + "</td><td class=\"num\">" + c.count + "</td>";
+    youBody.appendChild(tr);
+  }
+  for (const c of oppSorted) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td class=\"cardname\">" + escapeHtml(c.name) + "</td><td class=\"num\">" + c.count + "</td>";
+    oppBody.appendChild(tr);
+  }
+}
+
 async function recordGame(result) {
+  const chatResult = await captureChatPlays().catch((err) => {
+    console.warn("[Riftbound] history scan error:", err);
+    return { plays: [], buffer: [] };
+  });
+  const merged = mergePlayCounts(chatResult.plays, chatResult.buffer);
+  yourCardsPlayedThisGame = merged.bySide.you;
+  opponentCardsPlayedThisGame = merged.bySide.opp;
+  updateGameMetaDisplay();
+  renderRecordedDebug(merged.bySide.you, merged.bySide.opp, {
+    scanCount: chatResult.plays.length,
+    bufferCount: chatResult.buffer.length,
+    error: chatResult.error || null
+  }, merged.debug);
+
   const cardsPlayed = getCardsPlayedThisGame();
   const opponentCardsPlayed = getOpponentCardsPlayedThisGame();
   const opponentHeroEl = $("opponent-hero");

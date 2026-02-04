@@ -25,7 +25,7 @@ Set TCGA Nick. Type your in-game name exactly as it appears in chat.
 Play on tcg-arena
 On https://tcg-arena.fr/play the extension will read chat lines and update the tracker.
 Record the result
-After the game, click Record win or Record loss. Set Opponent legend. The record will automatically push the data to database where the site pulls it from
+After the game, click Record win or Record loss. When you do, the tracker scans the full chat history for every `played <card>` line so the final log is guaranteed to match what both players actually played. You can still set Opponent legend and the record will automatically push the data to the database where the site pulls it from
 
 ### HOW TO USE THE SITE
 
