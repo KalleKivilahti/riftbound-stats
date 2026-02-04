@@ -268,13 +268,29 @@ body {
   min-width: 4px;
   border-radius: 4px 4px 0 0;
   position: relative;
-  background: rgba(151, 147, 235, 0.65);
+  background: rgba(151, 147, 235, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .day-bar:hover {
   transform: translateY(-2px);
   opacity: 0.9;
+}
+
+.day-bar-seg {
+  width: 100%;
+}
+
+.day-bar-win {
+  background: var(--green);
+}
+
+.day-bar-loss {
+  background: var(--red);
 }
 
 .day-tooltip {

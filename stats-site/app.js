@@ -246,10 +246,23 @@ let filterPlayerLegend = "";
       const bar = document.createElement("div");
       bar.className = "day-bar";
       bar.style.height = (d.total / maxTotal) * 100 + "%";
-      bar.style.backgroundColor = d.wr >= 55 ? "var(--green)" : d.wr >= 45 ? "var(--amber)" : "var(--red)";
+      const wins = d.wins || 0;
+      const losses = Math.max(0, (d.total || 0) - wins);
+      const winPct = d.total ? (wins / d.total) * 100 : 0;
+      const lossPct = d.total ? (losses / d.total) * 100 : 0;
+
+      const lossSeg = document.createElement("div");
+      lossSeg.className = "day-bar-seg day-bar-loss";
+      lossSeg.style.height = lossPct + "%";
+      bar.appendChild(lossSeg);
+
+      const winSeg = document.createElement("div");
+      winSeg.className = "day-bar-seg day-bar-win";
+      winSeg.style.height = winPct + "%";
+      bar.appendChild(winSeg);
       const tooltip = document.createElement("span");
       tooltip.className = "day-tooltip";
-      tooltip.textContent = d.date + " · " + d.wins + "W / " + d.total + " · " + d.wr.toFixed(0) + "%";
+      tooltip.textContent = d.date + " · " + wins + "W / " + losses + "L · " + d.total + " games";
       bar.appendChild(tooltip);
       dayBarsEl.appendChild(bar);
     }
