@@ -263,17 +263,36 @@ body {
   padding: 0.5rem 0;
 }
 
-.day-bar {
+.day-bar-wrapper {
   flex: 1;
-  min-width: 4px;
+  min-width: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.day-bar {
+  width: 100%;
+  min-height: 40px;
   border-radius: 4px 4px 0 0;
   position: relative;
-  background: rgba(151, 147, 235, 0.2);
+  background: rgba(151, 147, 235, 0.1);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   overflow: hidden;
   transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.day-bar-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  transform: rotate(-30deg);
+  transform-origin: top left;
+  width: 100%;
+  text-align: center;
 }
 
 .day-bar:hover {

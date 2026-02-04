@@ -243,6 +243,9 @@ let filterPlayerLegend = "";
     dayBarsEl.innerHTML = "";
     const maxTotal = Math.max(...dayStats.map((d) => d.total), 1);
     for (const d of dayStats) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "day-bar-wrapper";
+
       const bar = document.createElement("div");
       bar.className = "day-bar";
       bar.style.height = (d.total / maxTotal) * 100 + "%";
@@ -260,11 +263,19 @@ let filterPlayerLegend = "";
       winSeg.className = "day-bar-seg day-bar-win";
       winSeg.style.height = winPct + "%";
       bar.appendChild(winSeg);
+
       const tooltip = document.createElement("span");
       tooltip.className = "day-tooltip";
-      tooltip.textContent = d.date + " · " + wins + "W / " + losses + "L · " + d.total + " games";
+      tooltip.textContent = `${d.date} · ${wins}W · ${losses}L · ${d.total} games`;
       bar.appendChild(tooltip);
-      dayBarsEl.appendChild(bar);
+
+      const label = document.createElement("span");
+      label.className = "day-bar-label";
+      label.textContent = d.date;
+
+      wrapper.appendChild(bar);
+      wrapper.appendChild(label);
+      dayBarsEl.appendChild(wrapper);
     }
   }
 
