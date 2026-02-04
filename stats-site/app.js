@@ -257,11 +257,13 @@ let filterPlayerLegend = "";
       const lossSeg = document.createElement("div");
       lossSeg.className = "day-bar-seg day-bar-loss";
       lossSeg.style.height = lossPct + "%";
+      lossSeg.style.bottom = "0";
       bar.appendChild(lossSeg);
 
       const winSeg = document.createElement("div");
       winSeg.className = "day-bar-seg day-bar-win";
       winSeg.style.height = winPct + "%";
+      winSeg.style.bottom = lossPct + "%";
       bar.appendChild(winSeg);
 
       const tooltip = document.createElement("span");
