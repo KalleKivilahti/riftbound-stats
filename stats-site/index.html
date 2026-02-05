@@ -102,26 +102,25 @@
         </div>
       </div>
 
-      <div class="cards-section opp-cards-section">
-        <div class="cards-header">
-          <h3>Opponent cards – your winrate when they play it</h3>
-          <input type="search" id="opp-card-search" class="search-input" placeholder="Search opponent cards" />
+        <div class="cards-section opp-cards-section">
+          <div class="cards-header">
+            <h3>Opponent cards – your winrate when they play it</h3>
+            <input type="search" id="opp-card-search" class="search-input" placeholder="Search opponent cards" />
+          </div>
+          <div class="table-wrap">
+            <table class="card-table" id="opp-card-table">
+              <thead>
+                <tr>
+                  <th class="col-name">Card</th>
+                  <th class="col-num">Games played</th>
+                  <th class="col-num">Wins when played</th>
+                  <th class="col-num">Winrate</th>
+                </tr>
+              </thead>
+              <tbody id="opp-card-body"></tbody>
+            </table>
+          </div>
         </div>
-        <div class="table-wrap">
-          <table class="card-table" id="opp-card-table">
-            <thead>
-              <tr>
-                <th class="col-name">Card</th>
-                <th class="col-num">Times opp played</th>
-                <th class="col-num">Games</th>
-                <th class="col-num">Wins</th>
-                <th class="col-num">Winrate</th>
-              </tr>
-            </thead>
-            <tbody id="opp-card-body"></tbody>
-          </table>
-        </div>
-      </div>
     </section>
 
     <section class="empty-state" id="empty-state">

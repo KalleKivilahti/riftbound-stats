@@ -14,13 +14,24 @@
   const dayBarsEl = $("day-bars");
   const winrateOverTime = $("winrate-over-time");
 
-const LEGENDS = [
-  "Azir","Irelia", "Fiora", "Ezreal", "Lucian", "Rumble", "Ornn",
-  "Annie", "Master Yi", "Lux", "Garen", "Ahri", "Darius",
-  "Jinx", "Kai'Sa", "Lee Sin", "Miss Fortune", "Sett", "Teemo",
-  "Viktor", "Volibear", "Yasuo", "Leona", "Draven", "Jax", "Rek'Sai",
-  "Sivir", "Renata Glasc"
-];
+  const LEGENDS = [
+    "Azir","Irelia", "Fiora", "Ezreal", "Lucian", "Rumble", "Ornn",
+    "Annie", "Master Yi", "Lux", "Garen", "Ahri", "Darius",
+    "Jinx", "Kai'Sa", "Lee Sin", "Miss Fortune", "Sett", "Teemo",
+    "Viktor", "Volibear", "Yasuo", "Leona", "Draven", "Jax", "Rek'Sai",
+    "Sivir", "Renata Glasc"
+  ];
+
+  const PLAYER_SIDE_ALIASES = new Set(["you", "player", "self", "mine", "my", "your"]);
+  const OPPONENT_SIDE_ALIASES = new Set(["opp", "opponent", "enemy", "them", "their", "theirs"]);
+
+  function normalizeCardSide(side) {
+    const value = (side || "").toString().trim().toLowerCase();
+    if (!value) return null;
+    if (PLAYER_SIDE_ALIASES.has(value)) return "you";
+    if (OPPONENT_SIDE_ALIASES.has(value)) return "opp";
+    return null;
+  }
 
   let currentData = null;
   let currentStats = null;
@@ -31,7 +42,7 @@ const LEGENDS = [
   let filterPlayerExclude = "";
   let filterOpponentHero = "";
   let filterBattlefield = "";
-let filterPlayerLegend = "";
+  let filterPlayerLegend = "";
   let oppCardFilterQuery = "";
 
   function setError(msg) {
@@ -81,8 +92,9 @@ let filterPlayerLegend = "";
       const game = gamesById[c.game_id];
       if (!game) continue;
       const entry = { name: c.card_name || "", count: Math.max(1, Number(c.count) || 1) };
-      if (c.side === "you") game.cardsPlayed.push(entry);
-      else game.opponentCardsPlayed.push(entry);
+      const sideKey = normalizeCardSide(c.side);
+      if (sideKey === "opp") game.opponentCardsPlayed.push(entry);
+      else game.cardsPlayed.push(entry);
     }
     const games = Object.values(gamesById).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
     return { games };
@@ -126,14 +138,11 @@ let filterPlayerLegend = "";
     return list;
   }
 
-  function buildStats(games) {
-    const filtered = getFilteredGames(games);
-    const wins = filtered.filter((g) => g.result === "win").length;
-    const total = filtered.length;
+  function collectCardRows(games, selector) {
     const byCard = new Map();
-    for (const game of filtered) {
+    for (const game of games || []) {
       const isWin = game.result === "win";
-      const cards = game.cardsPlayed || [];
+      const cards = selector(game) || [];
       for (const entry of cards) {
         const name = (entry.name || "").trim();
         if (!name) continue;
@@ -143,53 +152,32 @@ let filterPlayerLegend = "";
         if (isWin) rec.winsWhenPlayed += 1;
       }
     }
-    const rows = Array.from(byCard.entries()).map(([name, rec]) => ({
+    return Array.from(byCard.entries()).map(([name, rec]) => ({
       name,
       gamesPlayed: rec.gamesPlayed,
       winsWhenPlayed: rec.winsWhenPlayed,
       winrate: rec.gamesPlayed ? (100 * rec.winsWhenPlayed) / rec.gamesPlayed : 0
     }));
-    return { total, wins, rows };
   }
 
-  function timesPlayedBucket(count) {
-    const n = Math.max(0, Number(count) || 0);
-    if (n <= 1) return "1x";
-    if (n === 2) return "2x";
-    return "3x+";
+  function sortCardRows(rows) {
+    return rows.sort((a, b) => {
+      if (b.gamesPlayed !== a.gamesPlayed) return b.gamesPlayed - a.gamesPlayed;
+      return (a.name || "").localeCompare(b.name || "");
+    });
+  }
+
+  function buildStats(games) {
+    const filtered = getFilteredGames(games);
+    const wins = filtered.filter((g) => g.result === "win").length;
+    const total = filtered.length;
+    const rows = sortCardRows(collectCardRows(filtered, (game) => game.cardsPlayed));
+    return { total, wins, rows };
   }
 
   function buildOpponentCardStats(games) {
     const filtered = getFilteredGames(games);
-    const byKey = new Map();
-    for (const game of filtered) {
-      const isWin = game.result === "win";
-      const cards = game.opponentCardsPlayed || [];
-      for (const entry of cards) {
-        const name = (entry.name || "").trim();
-        if (!name) continue;
-        const bucket = timesPlayedBucket(entry.count);
-        const key = name + "\n" + bucket;
-        if (!byKey.has(key)) byKey.set(key, { cardName: name, timesPlayed: bucket, gamesPlayed: 0, winsWhenPlayed: 0 });
-        const rec = byKey.get(key);
-        rec.gamesPlayed += 1;
-        if (isWin) rec.winsWhenPlayed += 1;
-      }
-    }
-    return Array.from(byKey.values())
-      .map((rec) => ({
-        name: rec.cardName,
-        timesPlayed: rec.timesPlayed,
-        gamesPlayed: rec.gamesPlayed,
-        winsWhenPlayed: rec.winsWhenPlayed,
-        winrate: rec.gamesPlayed ? (100 * rec.winsWhenPlayed) / rec.gamesPlayed : 0
-      }))
-      .sort((a, b) => {
-        const nameCmp = (a.name || "").localeCompare(b.name || "");
-        if (nameCmp !== 0) return nameCmp;
-        const order = { "1x": 0, "2x": 1, "3x+": 2 };
-        return (order[a.timesPlayed] ?? 0) - (order[b.timesPlayed] ?? 0);
-      });
+    return sortCardRows(collectCardRows(filtered, (game) => game.opponentCardsPlayed));
   }
 
   function buildTurnStats(games) {
@@ -367,11 +355,10 @@ let filterPlayerLegend = "";
     for (const row of rows) {
       const tr = document.createElement("tr");
       tr.innerHTML =
-        "<td class=\"col-name\">" + escapeHtml(row.name) + "</td>" +
-        "<td class=\"col-num\">" + escapeHtml(row.timesPlayed || "") + "</td>" +
-        "<td class=\"col-num\">" + row.gamesPlayed + "</td>" +
-        "<td class=\"col-num\">" + row.winsWhenPlayed + "</td>" +
-        "<td class=\"col-num " + wrClass(row.winrate) + "\">" + row.winrate.toFixed(1) + "%</td>";
+      "<td class=\"col-name\">" + escapeHtml(row.name) + "</td>" +
+      "<td class=\"col-num\">" + row.gamesPlayed + "</td>" +
+      "<td class=\"col-num\">" + row.winsWhenPlayed + "</td>" +
+      "<td class=\"col-num " + wrClass(row.winrate) + "\">" + row.winrate.toFixed(1) + "%</td>";
       tbody.appendChild(tr);
     }
   }
