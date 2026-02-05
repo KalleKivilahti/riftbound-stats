@@ -103,7 +103,7 @@ body {
 }
 
 .dashboard {
-  width: min(1200px, 100%);
+  width: min(1600px, 100%);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
