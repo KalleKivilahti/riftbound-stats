@@ -84,19 +84,32 @@
         opponentHero: g.opponent_legend || null,
         turnCount: g.turn_count != null ? g.turn_count : null,
         date: g.played_at ? new Date(g.played_at).toISOString() : "",
-        cardsPlayed: [],
-        opponentCardsPlayed: []
+        cardsPlayed: new Map(),
+        opponentCardsPlayed: new Map()
       };
     }
     for (const c of apiCards || []) {
       const game = gamesById[c.game_id];
       if (!game) continue;
-      const entry = { name: c.card_name || "", count: Math.max(1, Number(c.count) || 1) };
-      const sideKey = normalizeCardSide(c.side);
-      if (sideKey === "opp") game.opponentCardsPlayed.push(entry);
-      else game.cardsPlayed.push(entry);
+      const name = (c.card_name || "").trim();
+      if (!name) continue;
+      const count = Math.max(1, Number(c.count) || 1);
+      const sideKey = normalizeCardSide(c.side) || "you";
+      const target = sideKey === "opp" ? game.opponentCardsPlayed : game.cardsPlayed;
+      target.set(name, (target.get(name) || 0) + count);
     }
-    const games = Object.values(gamesById).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    const games = Object.values(gamesById)
+      .map((game) => {
+        const { cardsPlayed, opponentCardsPlayed, ...rest } = game;
+        const playerCards = Array.from(cardsPlayed.entries()).map(([name, count]) => ({ name, count }));
+        const opponentCards = Array.from(opponentCardsPlayed.entries()).map(([name, count]) => ({ name, count }));
+        return {
+          ...rest,
+          cardsPlayed: playerCards,
+          opponentCardsPlayed: opponentCards
+        };
+      })
+      .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
     return { games };
   }
 
