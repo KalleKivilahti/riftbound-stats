@@ -82,25 +82,26 @@
         <div id="turn-stats-content"></div>
       </div>
 
-      <div class="cards-section">
-        <div class="cards-header">
-          <h3>Cards – winrate when played</h3>
-          <input type="search" id="card-search" class="search-input" placeholder="Search cards" />
+      <div class="cards-grid">
+        <div class="cards-section">
+          <div class="cards-header">
+            <h3>Cards – winrate when played</h3>
+            <input type="search" id="card-search" class="search-input" placeholder="Search cards" />
+          </div>
+          <div class="table-wrap">
+            <table class="card-table" id="card-table">
+              <thead>
+                <tr>
+                  <th class="col-name sortable" data-sort="name">Card</th>
+                  <th class="col-num sortable" data-sort="gamesPlayed">Games played</th>
+                  <th class="col-num sortable" data-sort="winsWhenPlayed">Wins when played</th>
+                  <th class="col-num sortable" data-sort="winrate">Winrate when played</th>
+                </tr>
+              </thead>
+              <tbody id="card-body"></tbody>
+            </table>
+          </div>
         </div>
-        <div class="table-wrap">
-          <table class="card-table" id="card-table">
-            <thead>
-              <tr>
-                <th class="col-name sortable" data-sort="name">Card</th>
-                <th class="col-num sortable" data-sort="gamesPlayed">Games played</th>
-                <th class="col-num sortable" data-sort="winsWhenPlayed">Wins when played</th>
-                <th class="col-num sortable" data-sort="winrate">Winrate when played</th>
-              </tr>
-            </thead>
-            <tbody id="card-body"></tbody>
-          </table>
-        </div>
-      </div>
 
         <div class="cards-section opp-cards-section">
           <div class="cards-header">
@@ -121,6 +122,7 @@
             </table>
           </div>
         </div>
+      </div>
     </section>
 
     <section class="empty-state" id="empty-state">

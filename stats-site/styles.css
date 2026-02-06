@@ -331,6 +331,12 @@ body {
   opacity: 1;
 }
 
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
 .cards-section {
   background: rgba(12, 12, 18, 0.8);
   border-radius: var(--radius);
@@ -480,6 +486,10 @@ body {
 
   .card-table tbody tr {
     border-radius: 6px;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
   }
 }
 
