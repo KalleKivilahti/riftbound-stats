@@ -45,28 +45,28 @@
         <div class="filters-grid">
           <div class="filter-field">
             <label class="filter-label" for="filter-include-players">Include</label>
-            <input type="text" id="filter-include-players" class="filter-input" placeholder="e.g. tog" />
+            <input type="text" id="filter-include-players" class="filter-input" placeholder="Player name..." />
           </div>
           <div class="filter-field">
             <label class="filter-label" for="filter-exclude-players">Exclude</label>
-            <input type="text" id="filter-exclude-players" class="filter-input" placeholder="e.g. tog" />
+            <input type="text" id="filter-exclude-players" class="filter-input" placeholder="Player name..." />
           </div>
           <div class="filter-field">
             <label class="filter-label" for="filter-player-legend">Player legend</label>
             <select id="filter-player-legend" class="filter-select secondary">
-              <option value="">Any</option>
+              <option value="">All</option>
             </select>
           </div>
           <div class="filter-field">
             <label class="filter-label" for="filter-opponent-hero">Opponents Legend</label>
             <select id="filter-opponent-hero" class="filter-select">
-              <option value="">Any</option>
+              <option value="">All</option>
             </select>
           </div>
           <div class="filter-field">
             <label class="filter-label" for="filter-battlefield">Battlefield</label>
             <select id="filter-battlefield" class="filter-select">
-              <option value="">Any</option>
+              <option value="">All</option>
             </select>
           </div>
         </div>
@@ -85,7 +85,7 @@
       <div class="cards-grid">
         <div class="cards-section">
           <div class="cards-header">
-            <h3>Cards – winrate when played</h3>
+            <h3>Your cards</h3>
             <input type="search" id="card-search" class="search-input" placeholder="Search cards" />
           </div>
           <div class="table-wrap">
@@ -93,9 +93,9 @@
               <thead>
                 <tr>
                   <th class="col-name sortable" data-sort="name">Card</th>
-                  <th class="col-num sortable" data-sort="gamesPlayed">Games played</th>
-                  <th class="col-num sortable" data-sort="winsWhenPlayed">Wins when played</th>
-                  <th class="col-num sortable" data-sort="winrate">Winrate when played</th>
+                  <th class="col-num sortable" data-sort="gamesPlayed">Played</th>
+                  <th class="col-num sortable" data-sort="winsWhenPlayed">Wins</th>
+                  <th class="col-num sortable" data-sort="winrate">Winrate</th>
                 </tr>
               </thead>
               <tbody id="card-body"></tbody>
@@ -105,16 +105,16 @@
 
         <div class="cards-section opp-cards-section">
           <div class="cards-header">
-            <h3>Opponent cards – your winrate when they play it</h3>
-            <input type="search" id="opp-card-search" class="search-input" placeholder="Search opponent cards" />
+            <h3>Opponents cards - your winrate when they play it</h3>
+            <input type="search" id="opp-card-search" class="search-input" placeholder="Search opponents cards" />
           </div>
           <div class="table-wrap">
             <table class="card-table" id="opp-card-table">
               <thead>
                 <tr>
                   <th class="col-name">Card</th>
-                  <th class="col-num">Games played</th>
-                  <th class="col-num">Wins when played</th>
+                  <th class="col-num">Played</th>
+                  <th class="col-num">Wins</th>
                   <th class="col-num">Winrate</th>
                 </tr>
               </thead>
