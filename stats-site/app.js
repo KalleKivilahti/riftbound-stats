@@ -67,10 +67,10 @@
     if (!url || !key) return null;
     const base = url.replace(/\/$/, "");
     const headers = { apikey: key, Authorization: "Bearer " + key };
-    const gamesRes = await fetch(base + "/rest/v1/games?select=*&order=played_at.asc", { headers });
+    const gamesRes = await fetch(base + "/rest/v1/games?select=*&order=played_at.asc&limit=5000", { headers });
     if (!gamesRes.ok) throw new Error("Games: " + gamesRes.status);
     const apiGames = await gamesRes.json();
-    const cardsRes = await fetch(base + "/rest/v1/game_cards?select=*", { headers });
+    const cardsRes = await fetch(base + "/rest/v1/game_cards?select=*&limit=5000", { headers });
     if (!cardsRes.ok) throw new Error("Game cards: " + cardsRes.status);
     const apiCards = await cardsRes.json();
     const gamesById = {};
